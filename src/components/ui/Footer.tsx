@@ -42,6 +42,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/ambassador" className="text-muted-foreground hover:text-primary transition-colors">
+                  Ambassadors
+                </Link>
+              </li>
+              <li>
                 <Link to="/learning" className="text-muted-foreground hover:text-primary transition-colors">
                   Learning
                 </Link>
