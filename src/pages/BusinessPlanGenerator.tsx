@@ -4,9 +4,9 @@ import {
   FileText, ArrowLeft, Loader2, Sparkles, Building2,
   Lightbulb, Wallet, AlertCircle, Edit3, RefreshCw, TrendingUp,
   Download, Crown, CheckCircle, X, Shrink, Expand,
-  LayoutList, Book, Target, Lock, Trash2, Save
+  LayoutList, Book, Target, Lock, Trash2, Save, Users
 } from "lucide-react";
-import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import { useNavigate, useLocation, Navigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -255,6 +255,16 @@ const BusinessPlanGenerator = () => {
     setIsAdjustingLength(false);
   };
 
+  // Extract funding readiness score from plan text (Section 11)
+  const extractFundingScore = (plan: string): number => {
+    const match = plan.match(/funding\s+readiness\s+score[^\d]*(\d{1,3})/i);
+    if (match) {
+      const score = parseInt(match[1]);
+      if (score >= 0 && score <= 100) return score;
+    }
+    return 0;
+  };
+
   const handleSavePlan = async () => {
     if (!generatedPlan || !user) return;
     if (!isPremium) {
@@ -268,24 +278,25 @@ const BusinessPlanGenerator = () => {
       }
     }
     setIsSaving(true);
+    const fundingScore = extractFundingScore(generatedPlan);
     try {
       const planName = form.businessName?.trim() || form.businessIdea?.trim().slice(0, 60) || "Untitled Plan";
       if (savePlanId) {
         const { error } = await supabase
           .from("business_plans")
-          .update({ name: planName, form_data: form, plan_content: generatedPlan, version: activeVersion, updated_at: new Date().toISOString() })
+          .update({ name: planName, form_data: form, plan_content: generatedPlan, version: activeVersion, funding_readiness_score: fundingScore, updated_at: new Date().toISOString() })
           .eq("id", savePlanId);
         if (error) throw error;
-        toast({ title: "Plan Updated", description: "Your changes have been saved." });
+        toast({ title: "Plan Updated", description: `Your changes have been saved.${fundingScore > 0 ? ` Funding Score: ${fundingScore}/100` : ''}` });
       } else {
         const { data, error } = await supabase
           .from("business_plans")
-          .insert({ user_id: user.id, name: planName, form_data: form, plan_content: generatedPlan, version: activeVersion })
+          .insert({ user_id: user.id, name: planName, form_data: form, plan_content: generatedPlan, version: activeVersion, funding_readiness_score: fundingScore })
           .select("id")
           .single();
         if (error) throw error;
         setSavePlanId(data.id);
-        toast({ title: "Plan Saved!", description: "Your business plan has been saved." });
+        toast({ title: "Plan Saved!", description: `Your business plan has been saved.${fundingScore > 0 ? ` Funding Score: ${fundingScore}/100 🎯` : ''}` });
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to save plan", variant: "destructive" });
@@ -732,6 +743,12 @@ const BusinessPlanGenerator = () => {
                     <Badge variant="outline" className="text-xs">
                       {isPremium ? 'Premium' : 'Free'} &middot; {revisionCount} revision{revisionCount !== 1 ? 's' : ''}
                     </Badge>
+                    {(() => {
+                      const score = extractFundingScore(generatedPlan);
+                      if (!score) return null;
+                      const color = score >= 80 ? 'bg-green-500/10 text-green-600 border-green-500/30' : score >= 60 ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' : 'bg-orange-500/10 text-orange-600 border-orange-500/30';
+                      return <Badge variant="outline" className={`text-xs ${color}`}>🎯 Funding Score: {score}/100</Badge>;
+                    })()}
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={handleReset}>
@@ -800,6 +817,11 @@ const BusinessPlanGenerator = () => {
               <Button variant="outline" onClick={handleReset}>
                 Generate Another Plan
               </Button>
+              <Link to="/community">
+                <Button variant="outline">
+                  <Users className="w-4 h-4 mr-2" /> Check Opportunity Hub
+                </Button>
+              </Link>
               {!isPremium && (
                 <Button variant="default" onClick={() => { trackEvent("attempted_upgrade"); navigate('/pricing'); }}>
                   <Crown className="w-4 h-4 mr-2" /> Upgrade to Premium

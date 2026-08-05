@@ -214,11 +214,21 @@ const SignupTypeSelection = () => {
         }
       }
 
-      toast({
-        title: "Account Created!",
-        description: "Welcome to Investours. Please complete your profile.",
-      });
-      navigate("/complete-profile");
+      // Check if user session exists (email confirmation off) or needs to confirm email
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        toast({
+          title: "Account Created!",
+          description: "Welcome to Investours. Please complete your profile.",
+        });
+        navigate("/complete-profile");
+      } else {
+        toast({
+          title: "Check your email!",
+          description: "We sent a confirmation link to " + formData.email + ". Click it to activate your account.",
+        });
+        navigate("/auth");
+      }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
