@@ -138,6 +138,8 @@ const Community = () => {
   const [commentsMap, setCommentsMap] = useState<Record<string, Comment[]>>({});
   const [newCommentMap, setNewCommentMap] = useState<Record<string, string>>({});
   const [sharePostId, setSharePostId] = useState<string | null>(null);
+  const [changeCategoryPostId, setChangeCategoryPostId] = useState<string | null>(null);
+  const [newCategoryValue, setNewCategoryValue] = useState<string>("");
   const [communityStats, setCommunityStats] = useState({
     totalMembers: 0,
     totalPosts: 0,
@@ -429,6 +431,18 @@ const Community = () => {
     }
   };
 
+  const handleChangeCategory = async (postId: string, category: string) => {
+    try {
+      const { error } = await supabase.from('posts').update({ category }).eq('id', postId);
+      if (error) throw error;
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, category } : p));
+      toast({ title: "Category Updated" });
+      setChangeCategoryPostId(null);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update category.", variant: "destructive" });
+    }
+  };
+
   const handleLike = async (postId: string, isLiked: boolean) => {
     if (!user) {
       toast({ title: "Login Required", description: "Please login to like posts." });
@@ -453,18 +467,17 @@ const Community = () => {
   };
 
   const handleShare = async (postId: string, platform: string) => {
-    if (!user) {
-      toast({ title: "Login Required", description: "Please login to share posts." });
-      return;
-    }
-
     try {
       const post = posts.find(p => p.id === postId);
-      const shareUrl = `${window.location.origin}/api/share?post=${postId}&ref=${profile?.referral_code || ""}`;
-      const pageUrl = `${window.location.origin}/community?post=${postId}&ref=${profile?.referral_code || ""}`;
+      const ref = profile?.referral_code ? `&ref=${profile.referral_code}` : "";
+      const shareUrl = `${window.location.origin}/api/share?post=${postId}${ref}`;
+      const pageUrl = `${window.location.origin}/community?post=${postId}${ref}`;
       const shareText = `Check out this post from Investours Opportunity Hub: "${post?.content?.substring(0, 100)}..."\n\n${pageUrl}`;
 
-      await supabase.from('post_shares').insert({ post_id: postId, user_id: user.id, platform: platform });
+      if (user) {
+        await supabase.from('post_shares').insert({ post_id: postId, user_id: user.id, platform });
+        setPosts(prev => prev.map(p => p.id === postId ? { ...p, shares_count: (p.shares_count || 0) + 1 } : p));
+      }
 
       switch (platform) {
         case 'facebook':
@@ -483,8 +496,8 @@ const Community = () => {
           window.location.href = `mailto:?subject=Check this out from Investours&body=${encodeURIComponent(shareText)}`;
           break;
         case 'copy':
-          await navigator.clipboard.writeText(shareUrl);
-          toast({ title: "Copied!", description: "Link copied to clipboard with your referral code." });
+          await navigator.clipboard.writeText(pageUrl);
+          toast({ title: "Copied!", description: "Link copied to clipboard." });
           break;
       }
 
@@ -588,14 +601,87 @@ const Community = () => {
                   Growth Community for Opportunities, Grants, Funding, Partnerships, Mentorship, Jobs & Gigs.
                 </p>
               </div>
-              <div className="flex items-center gap-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">{communityStats.totalMembers.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">Members</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">{communityStats.totalPosts.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">Posts</div>
+              <div className="flex items-center gap-4">
+                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                  <DialogTrigger asChild>
+                    <Button disabled={!user}>
+                      <PlusCircle className="w-4 h-4 mr-2" />
+                      Create Post
+                    </Button>
+                  </DialogTrigger>
+                  {user && (
+                    <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Create a Post</DialogTitle>
+                        <DialogDescription>Share your thoughts with the community</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="category">Category</Label>
+                          <Select value={newPostCategory} onValueChange={setNewPostCategory}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {categories.filter(c => c.name !== 'all').map(cat => (
+                                <SelectItem key={cat.name} value={cat.name}>{cat.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="content">Content</Label>
+                          <Textarea id="content" value={newPostContent} onChange={(e) => setNewPostContent(e.target.value)} placeholder="What's on your mind?" className="min-h-[150px]" />
+                        </div>
+                        <div>
+                          <Label htmlFor="file">Attachment (Optional)</Label>
+                          <p className="text-xs text-muted-foreground mb-1">Images max 3MB, Videos max 5MB</p>
+                          <Input id="file" type="file" accept="image/*,video/*,.pdf" onChange={handleFileSelect} disabled={isSubmitting} />
+                          {selectedFile && (
+                            <div className="mt-2">
+                              {filePreview && (
+                                <div className="relative mb-2 rounded-lg overflow-hidden border">
+                                  {selectedFile.type.startsWith("image/") ? (
+                                    <img src={filePreview} alt="Preview" className="w-full max-h-48 object-cover" />
+                                  ) : selectedFile.type.startsWith("video/") ? (
+                                    <div className="relative">
+                                      <img src={filePreview} alt="Video preview" className="w-full max-h-48 object-cover" />
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                        <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+                                          <Play className="w-6 h-6 text-foreground ml-0.5" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : null}
+                                  <button onClick={() => { setSelectedFile(null); setFilePreview(null); }} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors">
+                                    <X className="w-3 h-3 text-white" />
+                                  </button>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <FileText className="w-4 h-4" />
+                                {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" onClick={() => setIsCreateOpen(false)} disabled={isSubmitting}>Cancel</Button>
+                          <Button onClick={handleCreatePost} disabled={isSubmitting || !newPostContent.trim()}>
+                            {isSubmitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Posting...</> : 'Post'}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  )}
+                </Dialog>
+                <div className="flex items-center gap-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">{communityStats.totalMembers.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Members</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">{communityStats.totalPosts.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Posts</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -674,9 +760,28 @@ const Community = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge className={getCategoryColor(post.category)}>
-                              {getCategoryLabel(post.category).toUpperCase()}
-                            </Badge>
+                            {isAdmin && changeCategoryPostId === post.id ? (
+                              <div className="flex items-center gap-1">
+                                <Select value={newCategoryValue || post.category} onValueChange={setNewCategoryValue}>
+                                  <SelectTrigger className="h-7 text-xs w-36"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    {categories.filter(c => c.name !== 'all').map(cat => (
+                                      <SelectItem key={cat.name} value={cat.name}>{cat.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Button size="sm" className="h-7 px-2 text-xs" onClick={() => handleChangeCategory(post.id, newCategoryValue || post.category)}>Save</Button>
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setChangeCategoryPostId(null)}>✕</Button>
+                              </div>
+                            ) : (
+                              <Badge
+                                className={`${getCategoryColor(post.category)} ${isAdmin ? 'cursor-pointer hover:opacity-80' : ''}`}
+                                onClick={() => { if (isAdmin) { setChangeCategoryPostId(post.id); setNewCategoryValue(post.category); } }}
+                                title={isAdmin ? 'Click to change category' : undefined}
+                              >
+                                {getCategoryLabel(post.category).toUpperCase()}
+                              </Badge>
+                            )}
                             {isAdmin && (
                               <Button
                                 variant="ghost"
@@ -753,7 +858,10 @@ const Community = () => {
                         <div className="flex items-center justify-between pt-4 border-t border-border">
                           <div className="flex items-center gap-4 text-sm">
                             <button 
-                              onClick={() => handleLike(post.id, post.user_liked || false)}
+                              onClick={() => {
+                                if (!user) { toast({ title: "Login Required", description: "Please sign up or login to love posts.", action: undefined }); return; }
+                                handleLike(post.id, post.user_liked || false);
+                              }}
                               className={`flex items-center gap-1 transition-colors ${
                                 post.user_liked ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'
                               }`}
@@ -763,6 +871,7 @@ const Community = () => {
                             </button>
                             <button 
                               onClick={() => {
+                                if (!user) { toast({ title: "Login Required", description: "Please sign up or login to comment.", action: undefined }); return; }
                                 setSelectedPost(selectedPost === post.id ? null : post.id);
                                 if (selectedPost !== post.id) fetchComments(post.id);
                               }}
@@ -894,123 +1003,6 @@ const Community = () => {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Create Post Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create Post</CardTitle>
-                  <CardDescription>Share with the community</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="w-full" disabled={!user}>
-                        <PlusCircle className="w-4 h-4 mr-2" />
-                        New Post
-                      </Button>
-                    </DialogTrigger>
-                    {user && (
-                      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Create a Post</DialogTitle>
-                          <DialogDescription>
-                            Share your thoughts with the community
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="category">Category</Label>
-                            <Select value={newPostCategory} onValueChange={setNewPostCategory}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {categories.filter(c => c.name !== 'all').map(cat => (
-                                  <SelectItem key={cat.name} value={cat.name}>
-                                    {cat.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div>
-                            <Label htmlFor="content">Content</Label>
-                            <Textarea
-                              id="content"
-                              value={newPostContent}
-                              onChange={(e) => setNewPostContent(e.target.value)}
-                              placeholder="What's on your mind?"
-                              className="min-h-[150px]"
-                            />
-                          </div>
-
-                          <div>
-                            <Label htmlFor="file">Attachment (Optional)</Label>
-                            <p className="text-xs text-muted-foreground mb-1">Images max 3MB, Videos max 5MB</p>
-                            <Input
-                              id="file"
-                              type="file"
-                              accept="image/*,video/*,.pdf"
-                              onChange={handleFileSelect}
-                              disabled={isSubmitting}
-                            />
-                            {selectedFile && (
-                              <div className="mt-2">
-                                {filePreview && (
-                                  <div className="relative mb-2 rounded-lg overflow-hidden border">
-                                    {selectedFile.type.startsWith("image/") ? (
-                                      <img src={filePreview} alt="Preview" className="w-full max-h-48 object-cover" />
-                                    ) : selectedFile.type.startsWith("video/") ? (
-                                      <div className="relative">
-                                        <img src={filePreview} alt="Video preview" className="w-full max-h-48 object-cover" />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                                          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
-                                            <Play className="w-6 h-6 text-foreground ml-0.5" />
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ) : null}
-                                    <button
-                                      onClick={() => { setSelectedFile(null); setFilePreview(null); }}
-                                      className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
-                                    >
-                                      <X className="w-3 h-3 text-white" />
-                                    </button>
-                                  </div>
-                                )}
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <FileText className="w-4 h-4" />
-                                  {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                                  {!filePreview && (
-                                    <button
-                                      onClick={() => { setSelectedFile(null); setFilePreview(null); }}
-                                      className="ml-auto text-destructive hover:underline"
-                                    >
-                                      Remove
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setIsCreateOpen(false)} disabled={isSubmitting}>
-                              Cancel
-                            </Button>
-                            <Button onClick={handleCreatePost} disabled={isSubmitting || !newPostContent.trim()}>
-                              {isSubmitting ? (
-                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Posting...</>
-                              ) : 'Post'}
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    )}
-                  </Dialog>
-                </CardContent>
-              </Card>
-
               {/* Stats */}
               <Card>
                 <CardHeader>

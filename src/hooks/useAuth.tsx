@@ -14,9 +14,6 @@ interface Profile {
   user_type: 'individual' | 'group' | 'firm';
   user_tier: 'free' | 'premium' | 'exclusive';
   subscription_type: 'monthly' | 'quarterly' | 'biennial' | 'annual' | 'b2b_annual' | null;
-  has_active_subscription: boolean;
-  audit_credits: number;
-  account_type: 'individual' | 'business';
   is_gfe: boolean;
   referral_code: string | null;
   onboarding_completed: boolean;

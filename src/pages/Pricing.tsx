@@ -1,7 +1,13 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import {
-  Check,
+import { 
+  Check, 
+  Sparkles, 
+  Shield, 
+  BookOpen, 
+  Users, 
+  TrendingUp,
+  Award,
   ArrowRight,
   Mail,
   Building2
@@ -69,10 +75,10 @@ const Pricing = () => {
             className="text-center mb-12"
           >
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-             Individual & Business Plans
+              Individual Plans
             </h2>
             <p className="text-muted-foreground">
-              Use Audit Credit Packs (pay-as-you-go) for on-demand AI audits and scam checks, or upgrade to Premium for unlimited access to all tools, mentorship, and opportunities.
+              Start with the Free Plan, then upgrade whenever you're ready for more AI tools, mentorship, and opportunities.
             </p>
           </motion.div>
 
@@ -83,99 +89,67 @@ const Pricing = () => {
             viewport={{ once: true }}
             className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto"
           >
-            {/* Audit Credit Packs */}
+            {/* Free Plan */}
             <motion.div variants={fadeInUp}>
               <Card variant="elevated" className="h-full border-2 border-border/50">
                 <CardHeader className="text-center pb-4">
-                  <CardTitle className="text-2xl font-bold">Audit Credit Packs</CardTitle>
-                  <CardDescription className="text-base">
-                    Pay-as-you-go credits for on-demand AI financial audits and scam checks.
-                  </CardDescription>
+                  <CardTitle className="text-2xl font-bold">Free Plan</CardTitle>
+                  <div className="mt-4">
+                    <span className="text-4xl font-bold text-foreground">₦0</span>
+                    <span className="text-muted-foreground"> / Month</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Perfect for first-time learners.
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    {/* Starter */}
-                    <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
-                      <div className="flex items-baseline justify-between mb-2">
-                        <span className="text-sm font-medium">Starter</span>
-                        <div className="text-right">
-                          <span className="text-xl font-bold text-foreground">₦1,700</span>
-                          <span className="text-sm text-muted-foreground"> one-time</span>
-                        </div>
-                      </div>
-                      <div className="text-xs text-muted-foreground mb-3">
-                        2 Audit Credits · Valid 30 Days
-                      </div>
-                      <Link to="/signup">
-                        <Button variant="default" className="w-full" size="sm">
-                          Get Credit Pack
-                        </Button>
-                      </Link>
-                    </div>
-
-                    {/* Standard */}
-                    <div className="bg-accent/10 rounded-lg p-4 border-2 border-accent/30 relative">
-                      <div className="flex items-baseline justify-between mb-2">
-                        <span className="text-sm font-medium">Standard</span>
-                        <div className="text-right">
-                          <span className="text-xl font-bold text-foreground">₦6,800</span>
-                          <span className="text-sm text-muted-foreground"> one-time</span>
-                        </div>
-                      </div>
-                      <div className="text-xs text-muted-foreground mb-3">
-                        8 Audit Credits · Valid 90 Days
-                      </div>
-                      <Link to="/signup">
-                        <Button variant="accent" className="w-full" size="sm">
-                          Get Credit Pack
-                        </Button>
-                      </Link>
-                    </div>
-
-                    {/* Annual Pack */}
-                    <div className="bg-investours-gold/10 rounded-lg p-4 border-2 border-investours-gold/30 relative">
-                      <Badge className="absolute -top-2 -right-2 bg-investours-gold text-foreground">
-                        Best Value
-                      </Badge>
-                      <div className="flex items-baseline justify-between mb-2">
-                        <span className="text-sm font-medium">Annual Pack</span>
-                        <div className="text-right">
-                          <span className="text-xl font-bold text-foreground">₦6,800</span>
-                          <span className="text-sm text-muted-foreground"> one-time</span>
-                        </div>
-                      </div>
-                      <div className="text-xs text-muted-foreground mb-3">
-                        32 Audit Credits · Valid 360 Days
-                      </div>
-                      <Link to="/signup">
-                        <Button variant="default" className="w-full bg-investours-gold hover:bg-investours-gold/90 text-foreground" size="sm">
-                          Get Credit Pack
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-
-                  <ul className="space-y-2 pt-2">
-                    <li className="flex items-start gap-2">
-                      <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                      <span className="text-sm">Spend credits on AI Financial Audits &amp; Scam Detector scans</span>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-3">
+                      <Sparkles className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                      <span className="text-sm">
+                        <strong>AI Business Plan Generator</strong> → Generate and preview business plans (download unavailable)
+                      </span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                      <span className="text-sm">Financial Health Scores &amp; leakage detection</span>
+                    <li className="flex items-start gap-3">
+                      <BookOpen className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                      <span className="text-sm">
+                        <strong>AI Financial Tutor</strong> → Free for all with limited usage
+                      </span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                      <span className="text-sm">Recovery opportunity recommendations</span>
+                    <li className="flex items-start gap-3">
+                      <Shield className="w-5 h-5 text-accent mt-0.5 shrink-0" />
+                      <span className="text-sm">
+                        <strong>Scam Detector</strong> → Free for all with limited usage
+                      </span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                      <span className="text-sm">No automatic renewal — pay only for what you use</span>
+                    <li className="flex items-start gap-3">
+                      <TrendingUp className="w-5 h-5 text-investours-gold mt-0.5 shrink-0" />
+                      <span className="text-sm">
+                        <strong>Learning &amp; Mentorship</strong> → Access to selected financial literacy modules
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Users className="w-5 h-5 text-investours-coral mt-0.5 shrink-0" />
+                      <span className="text-sm">
+                        <strong>Community</strong> → Full access
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Award className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                      <span className="text-sm">
+                        <strong>Access to Licensed Partners</strong> → Coming soon (depends on regulation &amp; rollout)
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Sparkles className="w-5 h-5 text-investours-gold mt-0.5 shrink-0" />
+                      <span className="text-sm">
+                        <strong>Become an Investours Growth Partner (IGP)</strong> → Earn through referrals and community impact
+                      </span>
                     </li>
                   </ul>
-                  <Link to="/signup" className="block mt-4">
+                  <Link to="/signup" className="block mt-6">
                     <Button variant="outline" className="w-full" size="lg">
-                      Get Started with Credits
+                      Get Started Free
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
@@ -293,7 +267,7 @@ const Pricing = () => {
 
                   {/* Features */}
                   <div className="border-t border-border pt-4">
-                    <p className="text-sm font-semibold mb-3">All Audit Credit Pack features, plus:</p>
+                    <p className="text-sm font-semibold mb-3">All Free Plan features, plus:</p>
                     <ul className="space-y-2">
                       <li className="flex items-start gap-2">
                         <Check className="w-5 h-5 text-primary mt-0.5 shrink-0" />
