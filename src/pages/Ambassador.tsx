@@ -235,21 +235,16 @@ const AmbassadorApplyPage = () => {
           <h2 className="text-2xl font-bold text-center text-foreground mb-2">
             Growth Path & Rewards
           </h2>
-          <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Build your Financial Health Portfolio — any combination of active
-            businesses and individuals (1 business ≈ 2 individuals). Earn
-            first-time (30%) and recurring (15%) commissions at every tier.
-          </p>
           <div className="overflow-x-auto rounded-xl border border-border bg-card">
             <table className="w-full text-sm min-w-[900px]">
               <thead className="bg-secondary/30">
                 <tr>
-                  <th className="text-left py-3 px-4 font-semibold">Tier</th>
+                  <th className="text-left py-3 px-4 font-semibold">Category</th>
                   <th className="text-right py-3 px-4 font-semibold">Businesses</th>
                   <th className="text-right py-3 px-4 font-semibold">Individuals</th>
                   <th className="text-right py-3 px-4 font-semibold">Biz Income</th>
                   <th className="text-right py-3 px-4 font-semibold">Indiv Income</th>
-                  <th className="text-right py-3 px-4 font-semibold">Total / mo</th>
+                  <th className="text-right py-3 px-4 font-semibold">Monthly Income</th>
                   <th className="text-center py-3 px-4 font-semibold">Reward</th>
                 </tr>
               </thead>
