@@ -25,6 +25,34 @@ const WhoCanJoinSection = ({ items }: { items: string[] }) => (
   </div>
 );
 
+const HowItWorksSteps = [
+  {
+    title: "Join the Ambassadors",
+    description:
+      "Purchase an Audit Credit Pack (₦1,700) or Subscription (₦4,500) and gain access to Investours AI tools.",
+  },
+  {
+    title: "Teach Businesses & Individuals",
+    description:
+      "Teach businesses and individuals how to use AI to improve their financial health and monitor leakages, e.g., non-reversed double debits, incorrect bank charges, etc.",
+  },
+  {
+    title: "Build Your Portfolio",
+    description:
+      "Help businesses and individuals actively use the AI tools to improve their financial health and livelihood.",
+  },
+  {
+    title: "Earn Monthly Income",
+    description:
+      "Receive 30% first-time commission and 15% recurring commission from active subscriptions.",
+  },
+  {
+    title: "Meet Your Portfolio Value",
+    description:
+      "Grow your active portfolio to qualify for Quarterly Rewards, including branded wears, laptop, iPhone, grants, and more.",
+  },
+];
+
 const AmbassadorApplyPage = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -174,34 +202,25 @@ const AmbassadorApplyPage = () => {
           className="mb-16"
         >
           <h2 className="text-2xl font-bold text-center text-foreground mb-8">How It Works</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                <span className="text-xl font-bold text-primary">1</span>
-              </div>
-              <h3 className="font-semibold mb-1">Share Your Link</h3>
-              <p className="text-sm text-muted-foreground">
-                Share your unique referral link with your network.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                <span className="text-xl font-bold text-primary">2</span>
-              </div>
-              <h3 className="font-semibold mb-1">They Join & Pay</h3>
-              <p className="text-sm text-muted-foreground">
-                Your referrals subscribe to Investours' AI tools.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                <span className="text-xl font-bold text-primary">3</span>
-              </div>
-              <h3 className="font-semibold mb-1">Earn Commissions</h3>
-              <p className="text-sm text-muted-foreground">
-                30% first-time, 15% recurring — automatically.
-              </p>
-            </div>
+          <div className="max-w-3xl mx-auto space-y-3">
+            {HowItWorksSteps.map((step, idx) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                className="flex items-start gap-4"
+              >
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-xl font-bold text-primary">{idx + 1}</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold mb-1">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground">{step.description}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </motion.section>
 
