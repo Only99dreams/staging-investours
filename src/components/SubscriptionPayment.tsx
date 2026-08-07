@@ -136,6 +136,15 @@ export const SubscriptionPayment: React.FC<SubscriptionPaymentProps> = ({
 
         await refreshProfile();
 
+        // Send subscription activated email (fire-and-forget)
+        supabase.functions.invoke('send-notification', {
+          body: {
+            type: 'subscription_activated',
+            recipient_id: user.id,
+            plan_type: currentPlan.name,
+          }
+        }).catch(() => {});
+
         toast({
           title: '🎉 Subscription Activated!',
           description: `Your ${currentPlan.name} is now active. Enjoy premium access!`,
@@ -166,6 +175,14 @@ export const SubscriptionPayment: React.FC<SubscriptionPaymentProps> = ({
       });
       if (error) throw error;
       await refreshProfile();
+      // Send subscription activated email (fire-and-forget)
+      supabase.functions.invoke('send-notification', {
+        body: {
+          type: 'subscription_activated',
+          recipient_id: user.id,
+          plan_type: currentPlan.name,
+        }
+      }).catch(() => {});
       toast({ title: 'Subscription Activated!', description: 'Your premium subscription is now active for free!' });
       onSuccess?.();
     } catch (err: any) {
