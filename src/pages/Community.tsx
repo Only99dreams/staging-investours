@@ -60,6 +60,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateVideoThumbnail, updateShareOGTags } from "@/lib/utils";
 import { LinkifiedText } from "@/lib/LinkifiedText";
 
+const sendNotification = (payload: Record<string, unknown>) => {
+  supabase.functions.invoke('send-notification', { body: payload }).catch(() => {});
+};
+
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Banknote, Briefcase, Handshake, Rocket, GraduationCap, Calendar, Megaphone, MessageSquare, Tag, Search,
   Users, Heart, Share2, Filter
@@ -460,6 +464,17 @@ const Community = () => {
         setPosts(prev => prev.map(p => 
           p.id === postId ? { ...p, likes_count: (p.likes_count || 0) + 1, user_liked: true } : p
         ));
+        // Notify post author (fire-and-forget, skip if liking own post)
+        const post = posts.find(p => p.id === postId);
+        if (post && post.author_id !== user.id) {
+          sendNotification({
+            type: 'post_liked',
+            recipient_id: post.author_id,
+            actor_name: profile?.full_name || 'Someone',
+            post_id: postId,
+            post_preview: post.content,
+          });
+        }
       }
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -550,6 +565,18 @@ const Community = () => {
       setNewCommentMap(prev => ({ ...prev, [postId]: "" }));
       fetchComments(postId);
       setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p));
+      // Notify post author (skip if commenting on own post)
+      const post = posts.find(p => p.id === postId);
+      if (post && post.author_id !== user.id) {
+        sendNotification({
+          type: 'post_commented',
+          recipient_id: post.author_id,
+          actor_name: profile?.full_name || 'Someone',
+          post_id: postId,
+          post_preview: post.content,
+          comment_preview: newComment,
+        });
+      }
     } catch (error) {
       console.error('Error adding comment:', error);
     }
