@@ -101,6 +101,7 @@ const SignupTypeSelection = () => {
     gender: "",
     country: "",
     referralCode: getInitialReferralCode(),
+    disability: "",
     // B2B fields
     b2bName: "",
     b2bType: "",
@@ -171,6 +172,7 @@ const SignupTypeSelection = () => {
           phone: selectedType === 'individual' ? formData.phone : formData.contactPhone,
           country: formData.country,
           gender: formData.gender || null,
+          disability: formData.disability || null,
           user_type: selectedType as 'individual' | 'b2b' | 'firm',
           email_opt_in: emailOptIn
         };
@@ -217,6 +219,14 @@ const SignupTypeSelection = () => {
       // Check if user session exists (email confirmation off) or needs to confirm email
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        // Send welcome email (fire-and-forget)
+        supabase.functions.invoke('send-notification', {
+          body: {
+            type: 'welcome',
+            recipient_id: user?.id,
+            recipient_name: selectedType === 'individual' ? formData.fullName : formData.contactName,
+          }
+        }).catch(() => {});
         toast({
           title: "Account Created!",
           description: "Welcome to Investours. Please complete your profile.",
@@ -321,6 +331,24 @@ const SignupTypeSelection = () => {
                             </SelectContent>
                           </Select>
                         </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="disability">Do you have a disability?</Label>
+                        <Select value={formData.disability} onValueChange={(v) => setFormData({ ...formData, disability: v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select (optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No disability</SelectItem>
+                            <SelectItem value="visual">Visual impairment</SelectItem>
+                            <SelectItem value="hearing">Hearing impairment</SelectItem>
+                            <SelectItem value="mobility">Mobility / physical disability</SelectItem>
+                            <SelectItem value="cognitive">Cognitive / learning disability</SelectItem>
+                            <SelectItem value="speech">Speech / communication disability</SelectItem>
+                            <SelectItem value="multiple">Multiple disabilities</SelectItem>
+                            <SelectItem value="prefer-not">Prefer not to say</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </>
                   )}
