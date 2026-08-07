@@ -67,7 +67,7 @@ const Header = () => {
             >
               Home
             </Link>
-            <Link 
+            {/* <Link 
               to="/dashboard/plans" 
               className="text-foreground/80 hover:text-primary transition-colors font-medium"
             >
@@ -90,6 +90,12 @@ const Header = () => {
               className="text-foreground/80 hover:text-primary transition-colors font-medium"
             >
               Safe Offers
+            </Link> */}
+             <Link 
+              to="/auditor"
+              className="text-foreground/80 hover:text-primary transition-colors font-medium"
+            >
+              AI Auditor
             </Link>
             <Link 
               to="/community" 
