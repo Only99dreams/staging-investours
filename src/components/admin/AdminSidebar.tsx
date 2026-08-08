@@ -7,6 +7,9 @@ import {
   Building2,
   TrendingUp,
   Brain,
+  ScanSearch,
+  Star,
+  Package,
   GraduationCap,
   MessageSquare,
   Wallet,
@@ -23,7 +26,7 @@ import {
   Banknote,
   Tag,
   BarChart3,
-  Trophy
+  Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -42,6 +45,10 @@ const menuItems = [
   { icon: TrendingUp, label: "Investments", path: "/admin/investments" },
   { icon: Brain, label: "AI Tools", path: "/admin/ai-tools" },
   { icon: BarChart3, label: "BP Stats", path: "/admin/business-plan-stats" },
+  { icon: ScanSearch, label: "Auditor Analytics", path: "/admin/audit-analytics" },
+  { icon: Package, label: "Audit Packs", path: "/admin/audit-packs" },
+  { icon: Star, label: "Featured Products", path: "/admin/featured-solutions" },
+  { icon: Clock, label: "Audit Orders", path: "/admin/audit-orders" },
   { icon: GraduationCap, label: "Education", path: "/admin/education" },
   { icon: MessageSquare, label: "Opportunity Hub", path: "/admin/community" },
   { icon: Wallet, label: "Wallets", path: "/admin/wallets" },
@@ -54,7 +61,6 @@ const menuItems = [
   { icon: Mail, label: "Messages", path: "/admin/messages" },
   { icon: HeadphonesIcon, label: "Support", path: "/admin/support" },
   { icon: Radio, label: "Advertising", path: "/admin/advertising" },
-  { icon: Trophy, label: "AI Challenge", path: "/admin/ai-challenge" },
   { icon: Settings, label: "Settings", path: "/admin/settings" },
 ];
 

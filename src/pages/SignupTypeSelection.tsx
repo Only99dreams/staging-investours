@@ -218,15 +218,13 @@ const SignupTypeSelection = () => {
 
       // Check if user session exists (email confirmation off) or needs to confirm email
       const { data: { session } } = await supabase.auth.getSession();
+
       if (session) {
         // Send welcome email (fire-and-forget)
         supabase.functions.invoke('send-notification', {
-          body: {
-            type: 'welcome',
-            recipient_id: user?.id,
-            recipient_name: selectedType === 'individual' ? formData.fullName : formData.contactName,
-          }
+          body: { type: 'welcome', email: formData.email }
         }).catch(() => {});
+
         toast({
           title: "Account Created!",
           description: "Welcome to Investours. Please complete your profile.",
@@ -235,7 +233,7 @@ const SignupTypeSelection = () => {
       } else {
         toast({
           title: "Check your email!",
-          description: "We sent a confirmation link to " + formData.email + ". Click it to activate your account.",
+          description: "We've sent you a confirmation link. Please verify your email to complete your signup.",
         });
         navigate("/auth");
       }
@@ -331,24 +329,24 @@ const SignupTypeSelection = () => {
                             </SelectContent>
                           </Select>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="disability">Do you have a disability?</Label>
-                        <Select value={formData.disability} onValueChange={(v) => setFormData({ ...formData, disability: v })}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select (optional)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No disability</SelectItem>
-                            <SelectItem value="visual">Visual impairment</SelectItem>
-                            <SelectItem value="hearing">Hearing impairment</SelectItem>
-                            <SelectItem value="mobility">Mobility / physical disability</SelectItem>
-                            <SelectItem value="cognitive">Cognitive / learning disability</SelectItem>
-                            <SelectItem value="speech">Speech / communication disability</SelectItem>
-                            <SelectItem value="multiple">Multiple disabilities</SelectItem>
-                            <SelectItem value="prefer-not">Prefer not to say</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="space-y-2">
+                          <Label htmlFor="disability">Do you have a disability?</Label>
+                          <Select value={formData.disability} onValueChange={(v) => setFormData({ ...formData, disability: v })}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="visual">Visual</SelectItem>
+                              <SelectItem value="hearing">Hearing</SelectItem>
+                              <SelectItem value="mobility">Mobility</SelectItem>
+                              <SelectItem value="cognitive">Cognitive</SelectItem>
+                              <SelectItem value="speech">Speech</SelectItem>
+                              <SelectItem value="multiple">Multiple</SelectItem>
+                              <SelectItem value="prefer-not">Prefer not to say</SelectItem>
+                              <SelectItem value="none">None</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </>
                   )}

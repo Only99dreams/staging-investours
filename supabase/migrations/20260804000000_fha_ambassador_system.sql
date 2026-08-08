@@ -70,34 +70,41 @@ ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.commissions ENABLE ROW LEVEL SECURITY;
 
 -- Ambassadors: owner can read/update their own record; admins can read all
+DROP POLICY IF EXISTS "Ambassadors can read own record" ON public.ambassadors;
 CREATE POLICY "Ambassadors can read own record"
   ON public.ambassadors FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Ambassadors can update own record" ON public.ambassadors;
 CREATE POLICY "Ambassadors can update own record"
   ON public.ambassadors FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can manage all ambassadors" ON public.ambassadors;
 CREATE POLICY "Admins can manage all ambassadors"
   ON public.ambassadors FOR ALL
   USING (public.has_role(auth.uid(), 'admin'::public.app_role))
   WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 -- Referrals: owner can read their own referrals (via their ambassador row); admins all
+DROP POLICY IF EXISTS "Ambassadors can read own referrals" ON public.referrals;
 CREATE POLICY "Ambassadors can read own referrals"
   ON public.referrals FOR SELECT
   USING (EXISTS (SELECT 1 FROM public.ambassadors am WHERE am.id = ambassador_id AND am.user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Admins can manage all referrals" ON public.referrals;
 CREATE POLICY "Admins can manage all referrals"
   ON public.referrals FOR ALL
   USING (public.has_role(auth.uid(), 'admin'::public.app_role))
   WITH CHECK (public.has_role(auth.uid(), 'admin'::public.app_role));
 
 -- Commissions: ambassador owns their commissions; admins all
+DROP POLICY IF EXISTS "Ambassadors can read own commissions" ON public.commissions;
 CREATE POLICY "Ambassadors can read own commissions"
   ON public.commissions FOR SELECT
   USING (EXISTS (SELECT 1 FROM public.ambassadors am WHERE am.id = ambassador_id AND am.user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Admins can read all commissions" ON public.commissions;
 CREATE POLICY "Admins can read all commissions"
   ON public.commissions FOR SELECT
   USING (public.has_role(auth.uid(), 'admin'::public.app_role));
@@ -105,8 +112,10 @@ CREATE POLICY "Admins can read all commissions"
 -- ============================================================
 -- 6. updated_at trigger
 -- ============================================================
+DROP TRIGGER IF EXISTS update_ambassadors_updated_at ON public.ambassadors;
 CREATE TRIGGER update_ambassadors_updated_at BEFORE UPDATE ON public.ambassadors
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DROP TRIGGER IF EXISTS update_referrals_updated_at ON public.referrals;
 CREATE TRIGGER update_referrals_updated_at BEFORE UPDATE ON public.referrals
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -202,17 +211,17 @@ BEGIN
   ON CONFLICT (ambassador_id, referred_user_id) DO UPDATE
     SET status = 'active';
 
-  SELECT id INTO v_referral_id
-  FROM referrals
-  WHERE ambassador_id = v_ambassador_id
-    AND referred_user_id = p_user_id;
+  SELECT r.id INTO v_referral_id
+  FROM referrals r
+  WHERE r.ambassador_id = v_ambassador_id
+    AND r.referred_user_id = p_user_id;
 
   -- Decide commission type.
   -- A referral earns first_time (30%) exactly once; anything after is recurring (15%).
   SELECT EXISTS (
-    SELECT 1 FROM commissions
-    WHERE referral_id = v_referral_id
-      AND commission_type = 'first_time'
+    SELECT 1 FROM commissions c
+    WHERE c.referral_id = v_referral_id
+      AND c.commission_type = 'first_time'
   ) INTO v_first_exists;
 
   IF v_first_exists THEN
@@ -344,7 +353,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
   SELECT
-    ROW_NUMBER() OVER (ORDER BY monthly_commission DESC, total_earnings DESC) AS rank,
+    ROW_NUMBER() OVER (ORDER BY monthly_commission DESC, lifetime_earnings DESC) AS rank,
     ambassador_id,
     user_id,
     full_name,

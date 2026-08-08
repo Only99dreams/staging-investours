@@ -18,6 +18,16 @@ interface SubscriptionPaymentProps {
   onCancel?: () => void;
 }
 
+interface AppliedPromo {
+  code: string;
+  discount_percentage: number;
+  promo_code_id: string;
+}
+
+interface PaystackTransaction {
+  reference?: string;
+}
+
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY as string;
 
 const planDetails = {
@@ -42,7 +52,7 @@ export const SubscriptionPayment: React.FC<SubscriptionPaymentProps> = ({
   const { toast } = useToast();
 
   const [promoCode, setPromoCode] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<any>(null);
+  const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
   const [activating, setActivating] = useState(false);
 
@@ -106,8 +116,8 @@ export const SubscriptionPayment: React.FC<SubscriptionPaymentProps> = ({
       } else {
         toast({ title: 'Invalid Promo Code', description: data.message, variant: 'destructive' });
       }
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to validate promo code', variant: 'destructive' });
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to validate promo code', variant: 'destructive' });
     } finally {
       setPromoLoading(false);
     }
@@ -150,10 +160,10 @@ export const SubscriptionPayment: React.FC<SubscriptionPaymentProps> = ({
           description: `Your ${currentPlan.name} is now active. Enjoy premium access!`,
         });
         onSuccess?.();
-      } catch (err: any) {
+      } catch (err) {
         toast({
           title: 'Activation Failed',
-          description: err.message || 'Payment received but activation failed. Please contact support.',
+          description: err instanceof Error ? err.message : 'Payment received but activation failed. Please contact support.',
           variant: 'destructive',
         });
       } finally {
@@ -185,8 +195,8 @@ export const SubscriptionPayment: React.FC<SubscriptionPaymentProps> = ({
       }).catch(() => {});
       toast({ title: 'Subscription Activated!', description: 'Your premium subscription is now active for free!' });
       onSuccess?.();
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to activate subscription', variant: 'destructive' });
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to activate subscription', variant: 'destructive' });
     } finally {
       setActivating(false);
     }
@@ -220,7 +230,7 @@ export const SubscriptionPayment: React.FC<SubscriptionPaymentProps> = ({
       return;
     }
     initializePayment({
-      onSuccess: (transaction: any) => {
+      onSuccess: (transaction: PaystackTransaction) => {
         activateSubscription(transaction.reference ?? reference);
       },
       onClose: () => {

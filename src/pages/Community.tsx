@@ -164,7 +164,7 @@ const Community = () => {
       if (data && data.length > 0) {
         setCategories([
           { id: "all", name: "all", label: "All Posts", icon: "MessageSquare", color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100" },
-          ...data.map((c: any) => ({
+          ...data.map((c: { name: string; label: string; icon?: string | null; color?: string | null }) => ({
             id: c.name,
             name: c.name,
             label: c.label,
@@ -412,9 +412,9 @@ const Community = () => {
       setFilePreview(null);
       setIsCreateOpen(false);
       fetchPosts();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating post:', error);
-      toast({ title: "Error", description: error.message || "Failed to create post. Please try again.", variant: "destructive" });
+      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed to create post. Please try again.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }

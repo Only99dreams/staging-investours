@@ -856,7 +856,7 @@ const CommunitySection = () => {
            <div className="text-center pt-4">
             <Link to="/community">
               <Button variant="outline">
-                View All
+                View All Opportunities
               </Button>
             </Link>
           </div>

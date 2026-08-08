@@ -202,24 +202,20 @@ const AmbassadorApplyPage = () => {
           className="mb-16"
         >
           <h2 className="text-2xl font-bold text-center text-foreground mb-8">How It Works</h2>
-          <div className="max-w-3xl mx-auto space-y-3">
+          <div className="max-w-2xl mx-auto space-y-4">
             {HowItWorksSteps.map((step, idx) => (
-              <motion.div
+              <div
                 key={step.title}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.1 }}
-                className="flex items-start gap-4"
+                className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card/60"
               >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-xl font-bold text-primary">{idx + 1}</span>
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-bold text-primary">{idx + 1}</span>
                 </div>
-                <div className="flex-1">
+                <div>
                   <h3 className="font-semibold mb-1">{step.title}</h3>
                   <p className="text-sm text-muted-foreground">{step.description}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </motion.section>
@@ -239,7 +235,7 @@ const AmbassadorApplyPage = () => {
             <table className="w-full text-sm min-w-[900px]">
               <thead className="bg-secondary/30">
                 <tr>
-                  <th className="text-left py-3 px-4 font-semibold">Category</th>
+                  <th className="text-left py-3 px-4 font-semibold">Tier</th>
                   <th className="text-right py-3 px-4 font-semibold">Businesses</th>
                   <th className="text-right py-3 px-4 font-semibold">Individuals</th>
                   <th className="text-right py-3 px-4 font-semibold">Biz Income</th>

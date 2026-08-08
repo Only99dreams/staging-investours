@@ -40,7 +40,7 @@ interface Module {
   video_url: string | null;
   category: string | null;
   subcategory: string | null;
-  tier_required: "free" | "monthly" | "quarterly" | "annual" | "business";
+  tier_required: "free" | "premium" | "exclusive";
   is_published: boolean;
   order_index: number;
   created_at: string;
@@ -59,7 +59,7 @@ const EducationTab = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [category, setCategory] = useState("");
   const [subcategory, setSubcategory] = useState("");
-  const [tierRequired, setTierRequired] = useState<"free" | "monthly" | "quarterly" | "annual" | "business">("free");
+  const [tierRequired, setTierRequired] = useState<"free" | "premium" | "exclusive">("free");
   const [isPublished, setIsPublished] = useState(true);
 
   useEffect(() => {
@@ -101,6 +101,7 @@ const EducationTab = () => {
     setCategory(module.category || "");
     setSubcategory(module.subcategory || "");
     setTierRequired(module.tier_required || "free");
+    setIsPublished(module.is_published);
     setIsDialogOpen(true);
   };
 
@@ -184,6 +185,7 @@ const EducationTab = () => {
   const categories = [
     "Investment Basics",
     "Financial Literacy",
+    "Climate Finance",
     "Risk Management",
     "Scam Prevention",
     "SDG Investing",
@@ -290,16 +292,14 @@ const EducationTab = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Tier Required</Label>
-                  <Select value={tierRequired} onValueChange={(v: "free" | "monthly" | "quarterly" | "annual" | "business") => setTierRequired(v)}>
+                  <Select value={tierRequired} onValueChange={(v: "free" | "premium" | "exclusive") => setTierRequired(v)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="free">Free</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                      <SelectItem value="quarterly">Quarterly</SelectItem>
-                      <SelectItem value="annual">Annual</SelectItem>
-                      <SelectItem value="business">Business</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="exclusive">Exclusive</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -411,10 +411,8 @@ const EducationTab = () => {
                     <TableCell>{module.category || "-"}</TableCell>
                     <TableCell>
                       <Badge variant={
-                        module.tier_required === "business" ? "default" :
-                        module.tier_required === "annual" ? "default" :
-                        module.tier_required === "quarterly" ? "secondary" :
-                        module.tier_required === "monthly" ? "secondary" :
+                        module.tier_required === "exclusive" ? "default" :
+                        module.tier_required === "premium" ? "secondary" :
                         "outline"
                       }>
                         {module.tier_required}

@@ -121,7 +121,7 @@ const BusinessPlanGenerator = () => {
 
   // Load a saved plan from dashboard navigation
   useEffect(() => {
-    const savedPlan = (location.state as any)?.savedPlan;
+    const savedPlan = (location.state as { savedPlan?: { id?: string; form_data?: BusinessPlanForm; plan_content?: string; version?: VersionType } } | null)?.savedPlan;
     if (savedPlan) {
       if (savedPlan.form_data) setForm(savedPlan.form_data);
       if (savedPlan.plan_content) setGeneratedPlan(savedPlan.plan_content);
@@ -150,8 +150,8 @@ const BusinessPlanGenerator = () => {
       if (error) throw error;
       if (data.error) throw new Error(data.error);
       return data.response as string;
-    } catch (err: any) {
-      const msg = err.message || "Failed to generate business plan";
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to generate business plan";
       setError(msg);
       toast({ title: "Error", description: msg, variant: "destructive" });
       return null;
@@ -298,8 +298,8 @@ const BusinessPlanGenerator = () => {
         setSavePlanId(data.id);
         toast({ title: "Plan Saved!", description: `Your business plan has been saved.${fundingScore > 0 ? ` Funding Score: ${fundingScore}/100 🎯` : ''}` });
       }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message || "Failed to save plan", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Failed to save plan", variant: "destructive" });
     } finally {
       setIsSaving(false);
     }

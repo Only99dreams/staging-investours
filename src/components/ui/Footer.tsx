@@ -46,14 +46,14 @@ export function Footer() {
                   Ambassadors
                 </Link>
               </li>
-               <li>
+              <li>
                 <Link to="/auditor" className="text-muted-foreground hover:text-primary transition-colors">
                   AI Auditor
                 </Link>
               </li>
-               <li>
+              <li>
                 <Link to="/pricing" className="text-muted-foreground hover:text-primary transition-colors">
-                  Pricing 
+                  Pricing
                 </Link>
               </li>
               {/* <li>
