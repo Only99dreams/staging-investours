@@ -733,6 +733,21 @@ export function EducationSection() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  {(() => {
+                    const thumb = getVideoThumbnail(selectedModule);
+                    if (!thumb) return null;
+                    return (
+                      <div className="p-2">
+                        <div className="relative rounded overflow-hidden mb-1 w-48">
+                          <img src={thumb} alt="Thumbnail" className="w-full h-24 object-cover" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <Play className="w-5 h-5 text-white" />
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate w-48">{selectedModule.title}</p>
+                      </div>
+                    );
+                  })()}
                   <DropdownMenuItem onClick={() => handleShare(selectedModule, "copy")}>
                     <Copy className="w-4 h-4 mr-2" />
                     Copy Link

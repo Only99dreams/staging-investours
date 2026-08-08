@@ -8,8 +8,6 @@ import Welcome from "./pages/Welcome";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import SignupTypeSelection from "./pages/SignupTypeSelection";
-import AmbassadorApply from "./pages/Ambassador";
-import AmbassadorDashboard from "./pages/AmbassadorDashboard";
 import CompleteProfile from "./pages/CompleteProfile";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -36,8 +34,6 @@ const App = () => (
             <Route path="/home" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/signup" element={<SignupTypeSelection />} />
-            <Route path="/ambassador" element={<AmbassadorApply />} />
-            <Route path="/ambassador-dashboard" element={<AmbassadorDashboard />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
             <Route path="/dashboard/*" element={<Dashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />

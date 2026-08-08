@@ -42,9 +42,6 @@ export type Database = {
           bde_assigned_at: string | null
           bde_assigned_by: string | null
           subscription_type: string | null
-          has_active_subscription: boolean | null
-          audit_credits: number | null
-          account_type: string | null
           email_opt_in: boolean | null
           engagement_credit_earned: boolean | null
           ai_tutor_used: number | null
@@ -88,9 +85,6 @@ export type Database = {
           bde_assigned_at?: string | null
           bde_assigned_by?: string | null
           subscription_type?: string | null
-          has_active_subscription?: boolean | null
-          audit_credits?: number | null
-          account_type?: string | null
           email_opt_in?: boolean | null
           engagement_credit_earned?: boolean | null
           ai_tutor_used?: number | null
@@ -131,9 +125,6 @@ export type Database = {
           bde_assigned_at?: string | null
           bde_assigned_by?: string | null
           subscription_type?: string | null
-          has_active_subscription?: boolean | null
-          audit_credits?: number | null
-          account_type?: string | null
           email_opt_in?: boolean | null
           engagement_credit_earned?: boolean | null
           ai_tutor_used?: number | null
@@ -141,90 +132,6 @@ export type Database = {
           posts_created?: number | null
           created_at?: string | null
           updated_at?: string | null
-        }
-        }
-      ambassadors: {
-        Row: {
-          id: string
-          user_id: string
-          referral_code: string
-          tier: string
-          total_earnings: number
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          referral_code: string
-          tier?: string
-          total_earnings?: number
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          referral_code?: string
-          tier?: string
-          total_earnings?: number
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      referrals: {
-        Row: {
-          id: string
-          ambassador_id: string
-          referred_user_id: string
-          status: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          ambassador_id: string
-          referred_user_id: string
-          status?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          ambassador_id?: string
-          referred_user_id?: string
-          status?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      commissions: {
-        Row: {
-          id: string
-          ambassador_id: string
-          referral_id: string | null
-          amount: number
-          commission_type: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          ambassador_id: string
-          referral_id?: string | null
-          amount?: number
-          commission_type?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          ambassador_id?: string
-          referral_id?: string | null
-          amount?: number
-          commission_type?: string
-          created_at?: string
         }
       }
       user_roles: {
@@ -1479,21 +1386,7 @@ export type Database = {
       }
     }
     Views: {
-      ambassador_stats: {
-        Row: {
-          ambassador_id: string
-          user_id: string
-          referral_code: string
-          tier: string
-          lifetime_earnings: number
-          is_active: boolean
-          full_name: string | null
-          email: string | null
-          active_businesses: number
-          active_individuals: number
-          monthly_commission: number
-        }
-      }
+      [_ in never]: never
     }
     Functions: {
       has_role: {
@@ -1572,51 +1465,6 @@ export type Database = {
           p_user_id: string
         }
         Returns: boolean
-      }
-      check_ambassador_eligibility: {
-        Args: {
-          p_user_id: string
-        }
-        Returns: boolean
-      }
-      record_ambassador_commission: {
-        Args: {
-          p_user_id: string
-          p_amount: number
-          p_is_renewal?: boolean
-        }
-        Returns: Array<{
-          commission_id: string
-          amount: number
-          commission_type: string
-          ambassador_id: string
-          referral_id: string
-        }>
-      }
-      apply_ambassador: {
-        Args: Record<string, never>
-        Returns: Array<{
-          success: boolean
-          referral_code: string | null
-          tier: string | null
-          message: string
-        }>
-      }
-      get_ambassador_leaderboard: {
-        Args: Record<string, never>
-        Returns: Array<{
-          rank: number
-          ambassador_id: string
-          user_id: string
-          full_name: string
-          email: string
-          referral_code: string
-          tier: string
-          total_earnings: number
-          active_businesses: number
-          active_individuals: number
-          monthly_commission: number
-        }>
       }
     }
     Enums: {

@@ -22,7 +22,8 @@ import {
   Settings,
   Banknote,
   Tag,
-  BarChart3
+  BarChart3,
+  Trophy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ const menuItems = [
   { icon: Mail, label: "Messages", path: "/admin/messages" },
   { icon: HeadphonesIcon, label: "Support", path: "/admin/support" },
   { icon: Radio, label: "Advertising", path: "/admin/advertising" },
+  { icon: Trophy, label: "AI Challenge", path: "/admin/ai-challenge" },
   { icon: Settings, label: "Settings", path: "/admin/settings" },
 ];
 

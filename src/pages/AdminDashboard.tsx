@@ -23,6 +23,7 @@ import AdvertisingTab from "@/components/admin/tabs/AdvertisingTab";
 import PromoCodesTab from "@/components/admin/tabs/PromoCodesTab";
 import BusinessPlanStatsTab from "@/components/admin/tabs/BusinessPlanStatsTab";
 import SettingsTab from "@/components/admin/tabs/SettingsTab";
+import AIChallengeTab from "@/components/admin/tabs/AIChallengeTab";
 import AdminOverview from "@/components/admin/AdminOverview";
 import { Loader2 } from "lucide-react";
 import { DepositRequestsManager } from "@/components/admin/DepositRequestsManager";
@@ -85,6 +86,7 @@ const AdminDashboard = () => {
             <Route path="messages" element={<MessagesTab />} />
             <Route path="support" element={<SupportTab />} />
             <Route path="advertising" element={<AdvertisingTab />} />
+            <Route path="ai-challenge" element={<AIChallengeTab />} />
             <Route path="settings" element={<SettingsTab />} />
           </Routes>
         </main>
