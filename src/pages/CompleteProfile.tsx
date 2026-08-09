@@ -19,7 +19,6 @@ const signupReasons = [
   { id: "learn", label: "To learn about money and investing" },
   { id: "scams", label: "To protect myself from scams" },
   { id: "invest", label: "To access safe investment opportunities" },
-  { id: "climate", label: "To learn about climate resilience" },
   { id: "gfe", label: "To learn and make money as a Grassroots Financial Educator - GFE" }
 ];
 

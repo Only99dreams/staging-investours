@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Menu, X, User, LogOut, Settings, LayoutDashboard, ChevronDown, Shield, Building, FileText, Award } from "lucide-react";
+import { Menu, X, User, LogOut, Settings, LayoutDashboard, ChevronDown, Shield, Building, FileText, Award, ScanSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -67,34 +67,11 @@ const Header = () => {
             >
               Home
             </Link>
-            {/* <Link 
-              to="/dashboard/plans" 
-              className="text-foreground/80 hover:text-primary transition-colors font-medium"
-            >
-              My Plans
-            </Link>
             <Link 
-              to="/learning" 
-              className="text-foreground/80 hover:text-primary transition-colors font-medium"
+              to="/auditor" 
+              className="text-foreground/80 hover:text-primary transition-colors font-medium flex items-center gap-1"
             >
-              Learning
-            </Link>
-            <Link 
-              to="/vetting" 
-              className="text-foreground/80 hover:text-primary transition-colors font-medium"
-            >
-              Scam Detector
-            </Link>
-            <Link 
-              to="/investing" 
-              className="text-foreground/80 hover:text-primary transition-colors font-medium"
-            >
-              Safe Offers
-            </Link> */}
-             <Link 
-              to="/auditor"
-              className="text-foreground/80 hover:text-primary transition-colors font-medium"
-            >
+              <ScanSearch className="w-4 h-4" />
               AI Auditor
             </Link>
             <Link 
@@ -102,13 +79,6 @@ const Header = () => {
               className="text-foreground/80 hover:text-primary transition-colors font-medium"
             >
               Opportunity Hub
-            </Link>
-            <Link 
-              to="/ambassador" 
-              className="text-foreground/80 hover:text-primary transition-colors font-medium flex items-center gap-1"
-            >
-              <Award className="w-4 h-4" />
-              Ambassadors
             </Link>
             <Link 
               to="/pricing" 
@@ -294,6 +264,14 @@ const Header = () => {
             >
               <Award className="w-4 h-4" />
               Ambassadors
+            </Link>
+            <Link 
+              to="/auditor" 
+              className="py-2 px-4 rounded-lg text-foreground hover:bg-secondary transition-colors flex items-center gap-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <ScanSearch className="w-4 h-4" />
+              AI Auditor
             </Link>
             <Link 
               to="/pricing" 
