@@ -39,7 +39,8 @@ const Welcome = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4"
           >
-            Welcome to <span className="text-primary">Investours</span>
+            Welcome to{" "}
+            <span className="text-primary">Investours</span>
           </motion.h1>
 
           <motion.p
@@ -48,7 +49,7 @@ const Welcome = () => {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="text-lg md:text-xl text-primary font-medium mb-4"
           >
-            AI for Financial Intelligence &amp; Income Mobility
+            AI for financial intelligence and income mobility.
           </motion.p>
 
           <motion.p
@@ -57,16 +58,14 @@ const Welcome = () => {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="text-base md:text-lg text-muted-foreground mb-10 leading-relaxed"
           >
-            Access our AI-powered Livelihood Kit, discover income opportunities,
-            connect with mentors, and grow through the Financial Health Ambassadors program.
+            Turn ideas into income through AI-powered business planning, opportunities, mentorship, and financial tools.
           </motion.p>
 
-          {/* Primary CTA */}
+          {/* CTA Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
-            className="mb-6"
           >
             <Link to="/home">
               <Button variant="hero" size="xl" className="group">
@@ -82,67 +81,43 @@ const Welcome = () => {
             </Link>
           </motion.div>
 
-          {/* Ambassadors CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.9 }}
-            className="mb-16"
-          >
-            <Link to="/ambassador">
-              <Button variant="outline" size="xl" className="group">
-                Join Financial Health Ambassadors
-              </Button>
-            </Link>
-            <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-              Earn 30% first-time and 15% recurring commission while helping
-              businesses and individuals improve their financial health with AI.
-            </p>
-          </motion.div>
-
-          {/* Livelihood Kit */}
+          {/* Core Features */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.0 }}
-            className="mb-10"
+            className="mt-14"
           >
-            <h2 className="text-lg font-bold text-foreground mb-5">Livelihood Kit</h2>
+            <h2 className="text-lg font-bold text-foreground mb-5">Core Features</h2>
             <div className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-xl" aria-label="shield">🛡</span>
-                <span>AI Financial Auditor</span>
+                <svg className="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>AI Business Plan Generator</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xl" aria-label="document">📄</span>
-                <span>AI Business Planner</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl" aria-label="graduation cap">🎓</span>
-                <span>AI Financial Tutor</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl" aria-label="rotating light">🚨</span>
-                <span>Investment Scam Detector</span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* More Features */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1.1 }}
-            className="mb-16"
-          >
-            <h2 className="text-lg font-bold text-foreground mb-5">More Features</h2>
-            <div className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-xl" aria-label="globe">🌍</span>
+                <svg className="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
                 <span>Opportunity Hub &amp; Mentorship</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xl" aria-label="briefcase">💼</span>
+                <svg className="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>AI Financial Tutor</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>Investment Scam Detector</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
                 <span>Investment &amp; Microinsurance Marketplace (Coming Soon)</span>
               </div>
             </div>
@@ -153,6 +128,7 @@ const Welcome = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 1.2 }}
+            className="mt-12"
           >
             <p className="text-sm text-muted-foreground mb-4">Follow us on social media</p>
             <div className="flex items-center justify-center gap-3">

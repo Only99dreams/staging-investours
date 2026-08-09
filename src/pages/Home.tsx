@@ -74,9 +74,7 @@ const Home = () => {
               <span className="text-primary">and stay financially safe with AI.</span>
             </h1>
             <p className="text-lg text-muted-foreground mb-8">
-            Turn your idea into a funding-ready business plan in just 2 minutes,
-             monitor your financial health, improve your money skills, and avoid investment 
-            scams—all from one AI-powered Livelihood Kit.
+           Turn your idea into a funding-ready business plan in 2 minutes.
             </p>
             
             {/* AI Business Plan Generator */}
