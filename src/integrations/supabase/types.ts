@@ -446,6 +446,93 @@ export type Database = {
           created_at?: string | null
         }
       }
+      fha_chatroom_posts: {
+        Row: {
+          id: string
+          author_id: string
+          content: string
+          attachment_url: string | null
+          attachment_type: string | null
+          likes_count: number | null
+          comments_count: number | null
+          is_pinned: boolean | null
+          is_hidden: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          author_id: string
+          content: string
+          attachment_url?: string | null
+          attachment_type?: string | null
+          likes_count?: number | null
+          comments_count?: number | null
+          is_pinned?: boolean | null
+          is_hidden?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          author_id?: string
+          content?: string
+          attachment_url?: string | null
+          attachment_type?: string | null
+          likes_count?: number | null
+          comments_count?: number | null
+          is_pinned?: boolean | null
+          is_hidden?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      fha_chatroom_comments: {
+        Row: {
+          id: string
+          post_id: string
+          author_id: string
+          content: string
+          is_hidden: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          author_id: string
+          content: string
+          is_hidden?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          author_id?: string
+          content?: string
+          is_hidden?: boolean | null
+          created_at?: string | null
+        }
+      }
+      fha_chatroom_likes: {
+        Row: {
+          id: string
+          post_id: string
+          user_id: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          user_id: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          user_id?: string
+          created_at?: string | null
+        }
+      }
       notifications: {
         Row: {
           id: string

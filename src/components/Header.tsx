@@ -74,14 +74,20 @@ const Header = () => {
               <ScanSearch className="w-4 h-4" />
               AI Auditor
             </Link>
-            <Link 
-              to="/community" 
+            <Link
+              to="/ambassador"
               className="text-foreground/80 hover:text-primary transition-colors font-medium"
             >
-              Opportunity Hub
+              Ambassadors
             </Link>
-            <Link 
-              to="/pricing" 
+            <Link
+              to="/fha-chatroom"
+              className="text-foreground/80 hover:text-primary transition-colors font-medium"
+            >
+              FHA Chatroom
+            </Link>
+            <Link
+              to="/pricing"
               className="text-foreground/80 hover:text-primary transition-colors font-medium"
             >
               Pricing
@@ -257,16 +263,24 @@ const Header = () => {
             >
               Opportunity Hub
             </Link>
-            <Link 
-              to="/ambassador" 
+            <Link
+              to="/ambassador"
               className="py-2 px-4 rounded-lg text-foreground hover:bg-secondary transition-colors flex items-center gap-2"
               onClick={() => setIsMenuOpen(false)}
             >
               <Award className="w-4 h-4" />
               Ambassadors
             </Link>
-            <Link 
-              to="/auditor" 
+            <Link
+              to="/fha-chatroom"
+              className="py-2 px-4 rounded-lg text-foreground hover:bg-secondary transition-colors flex items-center gap-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <MessageSquare className="w-4 h-4" />
+              FHA Chatroom
+            </Link>
+            <Link
+              to="/auditor"
               className="py-2 px-4 rounded-lg text-foreground hover:bg-secondary transition-colors flex items-center gap-2"
               onClick={() => setIsMenuOpen(false)}
             >

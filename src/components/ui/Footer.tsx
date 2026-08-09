@@ -47,6 +47,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/fha-chatroom" className="text-muted-foreground hover:text-primary transition-colors">
+                  FHA Chatroom
+                </Link>
+              </li>
+              <li>
                 <Link to="/auditor" className="text-muted-foreground hover:text-primary transition-colors">
                   AI Auditor
                 </Link>
