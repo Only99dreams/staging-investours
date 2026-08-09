@@ -100,6 +100,16 @@ const AmbassadorDashboard = () => {
 
     if (!user) return;
 
+    const recheck = async () => {
+      try {
+        await supabase.rpc("recheck_ambassador_status", { p_user_id: user.id });
+        await fetchStats();
+      } catch {
+        // non-blocking: eligibility sync is best-effort on mount
+      }
+    };
+    recheck();
+
     const channel = supabase
       .channel("ambassador-dashboard-changes")
       .on("postgres_changes", {
@@ -181,6 +191,33 @@ const AmbassadorDashboard = () => {
               <Button asChild variant="hero" disabled={!isEligible}>
                 <Link to="/ambassador">Apply Now</Link>
               </Button>
+            </CardContent>
+          </Card>
+        ) : !stats?.is_active ? (
+          <Card className="mb-8 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Membership Paused
+              </CardTitle>
+              <CardDescription>
+                Your Financial Health Ambassador membership is temporarily paused because your
+                active subscription or Audit Credit Pack has expired. You cannot access the
+                Ambassadors community while paused.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Renew your subscription or purchase a new Audit Credit Pack to regain full access.
+                The system will automatically restore your membership once your access is active again.
+              </p>
+              <div className="flex gap-3">
+                <Button asChild variant="hero">
+                  <Link to="/pricing">Renew Subscription</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/pricing">Buy Audit Credits</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (

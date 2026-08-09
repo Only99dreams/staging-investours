@@ -132,7 +132,7 @@ const AmbassadorApplyPage = () => {
             Financial Health Ambassadors
           </h1>
           <p className="text-xl text-primary font-medium mb-4">
-            Build Africa's largest AI-powered financial health network.
+            Building Africa's largest AI-powered financial health network.
           </p>
           <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
             Our mission is to build Africa's largest network of AI-powered
@@ -140,6 +140,23 @@ const AmbassadorApplyPage = () => {
             businesses improve their financial wellbeing while creating
             sustainable recurring income opportunities for local communities.
           </p>
+        </motion.section>
+
+        {/* WhatsApp Image */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="mb-16"
+        >
+          <div className="flex justify-center">
+            <img
+              src="/WhatsApp Image 2026-08-06 at 17.55.53.jpeg"
+              alt="Financial Health Ambassadors"
+              className="max-w-2xl w-full rounded-2xl border border-border shadow-lg"
+            />
+          </div>
         </motion.section>
 
         {/* Who Can Join */}
@@ -229,19 +246,24 @@ const AmbassadorApplyPage = () => {
           className="mb-16"
         >
           <h2 className="text-2xl font-bold text-center text-foreground mb-2">
-            Growth Path & Rewards
+            Growth Path & Quarterly Rewards
           </h2>
+          <p className="text-center text-muted-foreground mb-6 max-w-2xl mx-auto">
+            Build your Financial Health Portfolio — any combination of active businesses and individuals.
+            Not compulsorily as in the table below. Earn first-time (30%) and recurring (15%) commissions
+            at every stage. Qualify for Rewards (EVERY 90 DAYS)!
+          </p>
           <div className="overflow-x-auto rounded-xl border border-border bg-card">
             <table className="w-full text-sm min-w-[900px]">
               <thead className="bg-secondary/30">
                 <tr>
-                  <th className="text-left py-3 px-4 font-semibold">Tier</th>
+                  <th className="text-left py-3 px-4 font-semibold">Category</th>
                   <th className="text-right py-3 px-4 font-semibold">Businesses</th>
                   <th className="text-right py-3 px-4 font-semibold">Individuals</th>
-                  <th className="text-right py-3 px-4 font-semibold">Biz Income</th>
-                  <th className="text-right py-3 px-4 font-semibold">Indiv Income</th>
-                  <th className="text-right py-3 px-4 font-semibold">Monthly Income</th>
-                  <th className="text-center py-3 px-4 font-semibold">Reward</th>
+                  <th className="text-right py-3 px-4 font-semibold">Income From Businesses</th>
+                  <th className="text-right py-3 px-4 font-semibold">Income From Individuals</th>
+                  <th className="text-right py-3 px-4 font-semibold">Total Monthly Income</th>
+                  <th className="text-center py-3 px-4 font-semibold">Rewards</th>
                 </tr>
               </thead>
               <tbody>
