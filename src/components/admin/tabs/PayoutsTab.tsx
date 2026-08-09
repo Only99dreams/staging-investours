@@ -1,18 +1,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, DollarSign, CheckCircle, XCircle, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Loader2, CheckCircle, XCircle, ArrowDownRight, ArrowUpRight, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DepositRequestsManager } from "@/components/admin/DepositRequestsManager";
 
@@ -20,22 +16,19 @@ const PayoutsTab = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [withdrawalRequests, setWithdrawalRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rejectDialogId, setRejectDialogId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [processing, setProcessing] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchWithdrawalRequests();
-  }, []);
+  useEffect(() => { fetchWithdrawalRequests(); }, []);
 
   const fetchWithdrawalRequests = async () => {
     try {
       const { data, error } = await supabase
         .from("withdrawal_requests")
-        .select(`
-          *,
-          user:profiles(full_name, email, bank_name, bank_account_number)
-        `)
+        .select("*, user:profiles(full_name, email)")
         .order("created_at", { ascending: false });
-
       if (error) throw error;
       setWithdrawalRequests(data || []);
     } catch (error) {
@@ -45,30 +38,43 @@ const PayoutsTab = () => {
     }
   };
 
-  const handleStatusUpdate = async (id: string, status: string) => {
+  const handleApprove = async (id: string) => {
+    setProcessing(id);
     try {
-      const { error } = await supabase
-        .from("withdrawal_requests")
-        .update({
-          status,
-          processed_at: new Date().toISOString()
-        })
-        .eq("id", id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Request marked as ${status}`,
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase.rpc("approve_withdrawal_request", {
+        p_request_id: id,
+        p_admin_id: user!.id,
       });
+      if (error || !data?.success) throw new Error(data?.error || error?.message);
+      toast({ title: "Approved", description: "Withdrawal approved and user notified." });
       fetchWithdrawalRequests();
-    } catch (error) {
-      console.error("Error updating request:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update request",
-        variant: "destructive",
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectDialogId) return;
+    setProcessing(rejectDialogId);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase.rpc("reject_withdrawal_request", {
+        p_request_id: rejectDialogId,
+        p_admin_id: user!.id,
+        p_rejection_reason: rejectReason || "Rejected by admin",
       });
+      if (error || !data?.success) throw new Error(data?.error || error?.message);
+      toast({ title: "Rejected", description: "Amount refunded to user wallet." });
+      setRejectDialogId(null);
+      setRejectReason("");
+      fetchWithdrawalRequests();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setProcessing(null);
     }
   };
 
@@ -77,12 +83,10 @@ const PayoutsTab = () => {
       <Tabs defaultValue="withdrawals" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="withdrawals" className="flex items-center gap-2">
-            <ArrowUpRight className="w-4 h-4" />
-            Withdrawal Requests
+            <ArrowUpRight className="w-4 h-4" /> Withdrawal Requests
           </TabsTrigger>
           <TabsTrigger value="deposits" className="flex items-center gap-2">
-            <ArrowDownRight className="w-4 h-4" />
-            Deposit Requests
+            <ArrowDownRight className="w-4 h-4" /> Deposit Requests
           </TabsTrigger>
         </TabsList>
 
@@ -104,9 +108,11 @@ const PayoutsTab = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>User</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Wallet Type</TableHead>
+                        <TableHead>Gross</TableHead>
+                        <TableHead>Fee</TableHead>
+                        <TableHead>Net (Pay Out)</TableHead>
                         <TableHead>Bank Details</TableHead>
+                        <TableHead>Wallet</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Actions</TableHead>
@@ -115,7 +121,7 @@ const PayoutsTab = () => {
                     <TableBody>
                       {withdrawalRequests.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center h-24">
+                          <TableCell colSpan={9} className="text-center h-24">
                             No withdrawal requests found.
                           </TableCell>
                         </TableRow>
@@ -125,64 +131,56 @@ const PayoutsTab = () => {
                             <TableCell className="font-medium">
                               {req.user?.full_name || "N/A"}
                               <br />
-                              <span className="text-xs text-muted-foreground">
-                                {req.user?.email}
-                              </span>
+                              <span className="text-xs text-muted-foreground">{req.user?.email}</span>
                             </TableCell>
-                            <TableCell className="font-bold">
-                              ₦{req.amount.toLocaleString()}
-                            </TableCell>
-                            <TableCell className="capitalize">
-                              {req.wallet_type?.replace(/_/g, " ")}
+                            <TableCell>₦{(req.gross_amount || req.amount || 0).toLocaleString()}</TableCell>
+                            <TableCell className="text-destructive">₦{(req.fee_amount || 0).toLocaleString()}</TableCell>
+                            <TableCell className="font-bold text-green-600">
+                              ₦{(req.net_amount || req.amount || 0).toLocaleString()}
                             </TableCell>
                             <TableCell>
                               <div className="text-xs">
-                                {req.user?.bank_name}
-                                <br />
-                                {req.user?.bank_account_number}
+                                <p className="font-medium">{req.bank_name || "—"}</p>
+                                <p className="text-muted-foreground">{req.bank_account_number || "—"}</p>
+                                <p className="text-muted-foreground">{req.bank_account_name || "—"}</p>
                               </div>
                             </TableCell>
+                            <TableCell className="capitalize text-xs">
+                              {req.wallet_type?.replace(/_/g, " ")}
+                            </TableCell>
                             <TableCell>
-                              <Badge
-                                variant={
-                                  req.status === "approved"
-                                    ? "default"
-                                    : req.status === "pending"
-                                    ? "secondary"
-                                    : "destructive"
-                                }
-                              >
+                              <Badge variant={
+                                req.status === "approved" ? "default" :
+                                req.status === "pending" ? "secondary" : "destructive"
+                              }>
                                 {req.status || "Pending"}
                               </Badge>
+                              {req.rejection_reason && (
+                                <p className="text-xs text-destructive mt-1">{req.rejection_reason}</p>
+                              )}
                             </TableCell>
+                            <TableCell>{new Date(req.created_at).toLocaleDateString()}</TableCell>
                             <TableCell>
-                              {new Date(req.created_at).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                {req.status === "pending" && (
-                                  <>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                      onClick={() => handleStatusUpdate(req.id, "approved")}
-                                      title="Approve"
-                                    >
-                                      <CheckCircle className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                      onClick={() => handleStatusUpdate(req.id, "rejected")}
-                                      title="Reject"
-                                    >
-                                      <XCircle className="h-4 w-4" />
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
+                              {req.status === "pending" && (
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="outline"
+                                    className="h-8 w-8 p-0 text-green-600 hover:bg-green-50"
+                                    onClick={() => handleApprove(req.id)}
+                                    disabled={processing === req.id}
+                                    title="Approve — confirm payment sent">
+                                    {processing === req.id
+                                      ? <Loader2 className="h-4 w-4 animate-spin" />
+                                      : <CheckCircle className="h-4 w-4" />}
+                                  </Button>
+                                  <Button size="sm" variant="outline"
+                                    className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                                    onClick={() => { setRejectDialogId(req.id); setRejectReason(""); }}
+                                    disabled={processing === req.id}
+                                    title="Reject — refunds user">
+                                    <XCircle className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
                             </TableCell>
                           </TableRow>
                         ))
@@ -199,9 +197,39 @@ const PayoutsTab = () => {
           <DepositRequestsManager />
         </TabsContent>
       </Tabs>
+
+      {/* Reject reason dialog */}
+      <Dialog open={!!rejectDialogId} onOpenChange={(o) => { if (!o) { setRejectDialogId(null); setRejectReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" /> Reject Withdrawal
+            </DialogTitle>
+            <DialogDescription>
+              The full gross amount will be refunded to the user's wallet automatically.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>Reason for rejection</Label>
+            <Input
+              placeholder="e.g. Invalid bank details, duplicate request..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setRejectDialogId(null); setRejectReason(""); }}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleReject} disabled={!!processing}>
+              {processing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Reject & Refund
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default PayoutsTab;
-

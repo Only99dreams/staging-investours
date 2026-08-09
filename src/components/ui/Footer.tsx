@@ -42,21 +42,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/ambassador" className="text-muted-foreground hover:text-primary transition-colors">
-                  Ambassadors
-                </Link>
-              </li>
-               <li>
-                <Link to="/auditor" className="text-muted-foreground hover:text-primary transition-colors">
-                  AI Auditor
-                </Link>
-              </li>
-               <li>
-                <Link to="/pricing" className="text-muted-foreground hover:text-primary transition-colors">
-                  Pricing 
-                </Link>
-              </li>
-              {/* <li>
                 <Link to="/learning" className="text-muted-foreground hover:text-primary transition-colors">
                   Learning
                 </Link>
@@ -65,7 +50,7 @@ export function Footer() {
                 <Link to="/vetting" className="text-muted-foreground hover:text-primary transition-colors">
                   Scam Detector
                 </Link>
-              </li> */}
+              </li>
               <li>
                 <Link to="/auth?mode=login" className="text-muted-foreground hover:text-primary transition-colors">
                   Login

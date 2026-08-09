@@ -4,22 +4,23 @@ import { useAuth } from "@/hooks/useAuth";
 import { 
   User, Wallet, GraduationCap, TrendingUp, FileText, Users, 
   Settings, Bell, MessageSquare, AlertCircle, Share2, Trophy,
-  Target, LogOut, Shield, Umbrella, Award
+  Target, LogOut, Shield, Umbrella, Award, BarChart3
 } from "lucide-react";
 import investoursLogo from "@/assets/investours-logo.png";
 
 const sidebarItems = [
   { icon: GraduationCap, label: "Education", path: "/dashboard/education" },
+  { icon: AlertCircle, label: "AI Auditor", path: "/dashboard/ai-reports", subtitle: "Searches & Scam Checks" },
+  { icon: Wallet, label: "Wallets", path: "/dashboard/wallets" },
+  { icon: BarChart3, label: "FHA Portfolio", path: "/dashboard/fha-portfolio" },
   { icon: FileText, label: "My Plans", path: "/dashboard/plans", subtitle: "Business Plans" },
   { icon: User, label: "Profile", path: "/dashboard/profile" },
   { icon: Bell, label: "Notifications", path: "/dashboard/notifications" },
   { icon: Award, label: "My Certificates", path: "/dashboard/certificates" },
-  { icon: FileText, label: "AI Reports", path: "/dashboard/ai-reports", subtitle: "Searches & Scam Checks" },
   { icon: TrendingUp, label: "Investments", path: "/dashboard/investments" },
   { icon: Umbrella, label: "Microinsurance", path: "/dashboard/microinsurance" },
   { icon: Share2, label: "Followers", path: "/dashboard/followers" },
   { icon: Trophy, label: "Leaderboard", path: "/dashboard/leaderboard" },
-  { icon: Wallet, label: "Wallets", path: "/dashboard/wallets" },
   { icon: Target, label: "SDG Impact", path: "/dashboard/sdg" },
   { icon: MessageSquare, label: "Messages", path: "/dashboard/messages" },
   { icon: AlertCircle, label: "Complaints", path: "/dashboard/complaints" },

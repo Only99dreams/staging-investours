@@ -7,23 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Wallet, Gem, Users, ArrowUpRight, ArrowDownRight, Clock, Building2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Wallet, Gem, Users, ArrowUpRight, ArrowDownRight, Clock, Building2,
+  Info, CheckCircle2, XCircle, Loader2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,244 +33,183 @@ interface WalletData {
   bank_details_locked: boolean;
 }
 
+interface WithdrawalPreview {
+  gross: number;
+  fee: number;
+  net: number;
+  fee_rate_pct: number;
+}
+
 export function WalletsSection() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [wallet, setWallet] = useState<WalletData | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [transactions, setTransactions] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [withdrawalHistory, setWithdrawalHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Bank Details State
   const [isBankDialogOpen, setIsBankDialogOpen] = useState(false);
-  const [bankForm, setBankForm] = useState({
-    bank_name: "",
-    bank_account_number: "",
-    bank_account_name: "",
-  });
+  const [bankForm, setBankForm] = useState({ bank_name: "", bank_account_number: "", bank_account_name: "" });
 
-  // Withdrawal State
   const [isWithdrawalDialogOpen, setIsWithdrawalDialogOpen] = useState(false);
-  const [withdrawalForm, setWithdrawalForm] = useState({
-    amount: "",
-    wallet_type: "user_wallet",
-  });
+  const [withdrawalForm, setWithdrawalForm] = useState({ amount: "", wallet_type: "user_wallet" });
+  const [preview, setPreview] = useState<WithdrawalPreview | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => { if (user) fetchAll(); }, [user]);
+
+  // Live fee preview as user types
   useEffect(() => {
-    if (user) fetchWallet();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+    const amount = parseFloat(withdrawalForm.amount);
+    if (!isNaN(amount) && amount >= 5000) {
+      const feeRate = profile?.user_tier === "premium" ? 0.10 : 0.15;
+      const fee = Math.round(amount * feeRate * 100) / 100;
+      setPreview({ gross: amount, fee, net: amount - fee, fee_rate_pct: feeRate * 100 });
+    } else {
+      setPreview(null);
+    }
+  }, [withdrawalForm.amount, profile?.user_tier]);
 
-  const fetchWallet = async () => {
+  const fetchAll = async () => {
     if (!user) return;
-    
-    const { data, error } = await supabase
-      .from("wallets")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    setIsLoading(true);
 
-    if (data) {
-      setWallet(data);
+    const { data: walletData } = await supabase
+      .from("wallets").select("*").eq("user_id", user.id).maybeSingle();
+
+    if (walletData) {
+      setWallet(walletData);
       setBankForm({
-        bank_name: data.bank_name || "",
-        bank_account_number: data.bank_account_number || "",
-        bank_account_name: data.bank_account_name || "",
+        bank_name: walletData.bank_name || "",
+        bank_account_number: walletData.bank_account_number || "",
+        bank_account_name: walletData.bank_account_name || "",
       });
+
+      const { data: txns } = await supabase
+        .from("wallet_transactions").select("*")
+        .eq("wallet_id", walletData.id)
+        .order("created_at", { ascending: false }).limit(20);
+      setTransactions(txns || []);
     }
 
-    // Fetch transactions
-    const { data: txns } = await supabase
-      .from("wallet_transactions")
-      .select("*")
-      .eq("wallet_id", data?.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
+    const { data: withdrawals } = await supabase
+      .from("withdrawal_requests").select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }).limit(10);
+    setWithdrawalHistory(withdrawals || []);
 
-    setTransactions(txns || []);
     setIsLoading(false);
   };
 
   const handleUpdateBankDetails = async () => {
-    try {
-      if (!wallet) return;
+    if (!wallet) return;
+    const { error } = await supabase.from("wallets").update({
+      bank_name: bankForm.bank_name,
+      bank_account_number: bankForm.bank_account_number,
+      bank_account_name: bankForm.bank_account_name,
+    }).eq("id", wallet.id);
 
-      const { error } = await supabase
-        .from("wallets")
-        .update({
-          bank_name: bankForm.bank_name,
-          bank_account_number: bankForm.bank_account_number,
-          bank_account_name: bankForm.bank_account_name,
-        })
-        .eq("id", wallet.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Bank details updated successfully",
-      });
-      setIsBankDialogOpen(false);
-      fetchWallet();
-    } catch (error) {
-      console.error("Error updating bank details:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update bank details",
-        variant: "destructive",
-      });
+    if (error) {
+      toast({ title: "Error", description: "Failed to update bank details", variant: "destructive" });
+      return;
     }
+    toast({ title: "Saved", description: "Bank details updated successfully" });
+    setIsBankDialogOpen(false);
+    fetchAll();
   };
 
   const handleRequestWithdrawal = async () => {
-    try {
-      if (!wallet || !user || !profile) return;
-
-      const amount = parseFloat(withdrawalForm.amount);
-      const balance = withdrawalForm.wallet_type === "user_wallet"
-        ? wallet.user_wallet_balance
-        : wallet.gfe_wallet_balance;
-
-      if (isNaN(amount) || amount < 5000) {
-        toast({
-          title: "Invalid Amount",
-          description: "Minimum withdrawal is ₦5,000",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (amount > balance) {
-        toast({
-          title: "Insufficient Funds",
-          description: "Withdrawal amount exceeds balance",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Get withdrawal fee rate based on user tier
-      const feeRate = profile.user_tier === "premium" ? 0.10 : 0.15;
-      const fee = amount * feeRate;
-      const netAmount = amount - fee;
-
-      const { error } = await supabase
-        .from("withdrawal_requests")
-        .insert({
-          user_id: user.id,
-          amount: netAmount, // Store net amount after fee
-          wallet_type: withdrawalForm.wallet_type,
-          status: "pending",
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Withdrawal request submitted. Fee: ₦${fee.toLocaleString()}, Net amount: ₦${netAmount.toLocaleString()}`,
-      });
-      setIsWithdrawalDialogOpen(false);
-      setWithdrawalForm({ amount: "", wallet_type: "user_wallet" });
-      // Optionally create a transaction record here or let a backend trigger handle it
-    } catch (error) {
-      console.error("Error requesting withdrawal:", error);
-      toast({
-        title: "Error",
-        description: "Failed to submit withdrawal request",
-        variant: "destructive",
-      });
+    if (!user || !wallet) return;
+    const amount = parseFloat(withdrawalForm.amount);
+    if (isNaN(amount) || amount < 5000) {
+      toast({ title: "Invalid Amount", description: "Minimum withdrawal is ₦5,000", variant: "destructive" });
+      return;
     }
+
+    setIsSubmitting(true);
+    const { data, error } = await supabase.rpc("submit_withdrawal_request", {
+      p_user_id: user.id,
+      p_amount: amount,
+      p_wallet_type: withdrawalForm.wallet_type,
+    });
+    setIsSubmitting(false);
+
+    if (error || !data?.success) {
+      toast({ title: "Error", description: data?.error || error?.message || "Failed to submit request", variant: "destructive" });
+      return;
+    }
+
+    toast({
+      title: "✅ Withdrawal Submitted!",
+      description: `₦${data.net.toLocaleString()} will be sent to your bank (₦${data.fee.toLocaleString()} fee deducted). Processing within 72 hours.`,
+    });
+    setIsWithdrawalDialogOpen(false);
+    setWithdrawalForm({ amount: "", wallet_type: "user_wallet" });
+    setPreview(null);
+    fetchAll();
   };
+
+  const selectedBalance = wallet
+    ? withdrawalForm.wallet_type === "gfe_wallet"
+      ? wallet.gfe_wallet_balance
+      : wallet.user_wallet_balance
+    : 0;
 
   const walletCards = [
     {
-      title: "User Wallet",
+      title: "Main Wallet",
       balance: wallet?.user_wallet_balance || 0,
       icon: Wallet,
-      color: "from-emerald to-emerald/70",
-      description: "Non-referral income"
+      gradient: "from-emerald-500 to-emerald-600",
+      description: "All user income",
     },
     {
       title: "Gem Points",
       balance: wallet?.gem_points || 0,
       icon: Gem,
-      color: "from-gold to-gold/70",
-      description: "Earned from learning activities, challenges, and engagement. (Redeemable)",
-      isPoints: true
+      gradient: "from-amber-400 to-amber-500",
+      description: "Learning & engagement rewards",
+      isPoints: true,
     },
     {
       title: "GFE Wallet",
       balance: wallet?.gfe_wallet_balance || 0,
       icon: Users,
-      color: "from-primary to-primary/70",
-      description: "Referral commissions & educator earnings",
-      locked: !profile?.is_gfe || !profile?.gfe_terms_agreed_at,
-      gfeOnly: true
-    }
+      gradient: "from-primary to-primary/80",
+      description: "Referral commissions",
+      locked: !profile?.is_gfe,
+    },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      {/* Engagement Credit */}
-      {!profile?.engagement_credit_earned && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card className="border-accent/20 bg-accent/5">
-            <CardContent className="p-6">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">Unlock ₦2,000 1st Engagement Credit</h3>
-                <p className="text-muted-foreground mb-4">
-                  Complete these activities to earn your welcome bonus:
-                </p>
-                <div className="flex justify-center items-center gap-6 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                      (profile?.ai_tutor_used || 0) >= 3 ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"
-                    )}>
-                      {(profile?.ai_tutor_used || 0) >= 3 ? "✓" : profile?.ai_tutor_used || 0}
-                    </div>
-                    <span>Use AI Tutor ×3</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                      (profile?.videos_watched || 0) >= 1 ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"
-                    )}>
-                      {(profile?.videos_watched || 0) >= 1 ? "✓" : profile?.videos_watched || 0}
-                    </div>
-                    <span>Watch 1 video</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                      (profile?.posts_created || 0) >= 1 ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"
-                    )}>
-                      {(profile?.posts_created || 0) >= 1 ? "✓" : profile?.posts_created || 0}
-                    </div>
-                    <span>Post once</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+
+      {/* Commission Rate Banner */}
+      <Alert className="border-primary/20 bg-primary/5">
+        <Info className="h-4 w-4 text-primary" />
+        <AlertDescription className="text-sm">
+          <strong>Your Commission Rates:</strong> 30% on first-time referral subscriptions · 15% on renewals · 2% indirect bonus.
+          Commissions are credited to your GFE Wallet instantly when your referral pays.
+        </AlertDescription>
+      </Alert>
 
       {/* Wallet Cards */}
       <div className="grid md:grid-cols-3 gap-4">
         {walletCards.map((card, index) => (
-          <motion.div
-            key={card.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
+          <motion.div key={card.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
             <Card className="overflow-hidden">
-              <div className={cn("h-2 bg-gradient-to-r", card.color)} />
-              <CardContent className="p-6">
+              <div className={cn("h-1.5 bg-gradient-to-r", card.gradient)} />
+              <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">{card.title}</p>
@@ -284,18 +218,12 @@ export function WalletsSection() {
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
                   </div>
-                  <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center",
-                    `bg-gradient-to-br ${card.color} text-white`
-                  )}>
+                  <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br text-white", card.gradient)}>
                     <card.icon className="w-5 h-5" />
                   </div>
                 </div>
-                
                 {card.locked && (
-                  <Badge variant="outline" className="mt-3 text-xs">
-                    {card.gfeOnly ? "Become a GFE to access" : "Agree to GFE terms to unlock"}
-                  </Badge>
+                  <Badge variant="outline" className="mt-3 text-xs">Become a GFE to unlock</Badge>
                 )}
               </CardContent>
             </Card>
@@ -303,218 +231,257 @@ export function WalletsSection() {
         ))}
       </div>
 
-      {/* Bank Details & Transactions */}
+      {/* Bank Details + Withdrawal */}
       <div className="grid md:grid-cols-2 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Bank Account Details</CardTitle>
-                <CardDescription>Your withdrawal account</CardDescription>
-              </div>
-              {!wallet?.bank_details_locked && (
-                <Dialog open={isBankDialogOpen} onOpenChange={setIsBankDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      {wallet?.bank_account_number ? "Edit" : "Add"}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Bank Account Details</DialogTitle>
-                      <DialogDescription>
-                        Enter your bank details for withdrawals.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="bank_name">Bank Name</Label>
-                        <Input
-                          id="bank_name"
-                          placeholder="e.g. First Bank"
-                          value={bankForm.bank_name}
-                          onChange={(e) => setBankForm({ ...bankForm, bank_name: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="account_number">Account Number</Label>
-                        <Input
-                          id="account_number"
-                          placeholder="0123456789"
-                          value={bankForm.bank_account_number}
-                          onChange={(e) => setBankForm({ ...bankForm, bank_account_number: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="account_name">Account Name</Label>
-                        <Input
-                          id="account_name"
-                          placeholder="John Doe"
-                          value={bankForm.bank_account_name}
-                          onChange={(e) => setBankForm({ ...bankForm, bank_account_name: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsBankDialogOpen(false)}>Cancel</Button>
-                      <Button onClick={handleUpdateBankDetails}>Save Details</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </CardHeader>
-            <CardContent>
-              {wallet?.bank_account_number ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                      <Building2 className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">{wallet.bank_name}</p>
-                      <p className="text-sm text-muted-foreground">{wallet.bank_account_number}</p>
-                      <p className="text-xs text-muted-foreground uppercase">{wallet.bank_account_name}</p>
-                    </div>
-                  </div>
-                  {wallet.bank_details_locked && (
-                    <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-md">
-                      <Clock className="w-4 h-4" />
-                      <span>Details are locked pending verification</span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">No bank details added yet</p>
-                  <Button variant="secondary" onClick={() => setIsBankDialogOpen(true)}>
-                    Add Bank Details
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Recent Transactions</CardTitle>
-                <CardDescription>Your latest wallet activity</CardDescription>
-              </div>
-              <Dialog open={isWithdrawalDialogOpen} onOpenChange={setIsWithdrawalDialogOpen}>
+        {/* Bank Details */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
+              <CardTitle className="text-base">Bank Account</CardTitle>
+              <CardDescription>Your withdrawal destination</CardDescription>
+            </div>
+            {!wallet?.bank_details_locked && (
+              <Dialog open={isBankDialogOpen} onOpenChange={setIsBankDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={!wallet?.bank_account_number}>
-                    Request Withdrawal
-                  </Button>
+                  <Button variant="outline" size="sm">{wallet?.bank_account_number ? "Edit" : "Add"}</Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Request Withdrawal</DialogTitle>
-                    <DialogDescription>
-                      Withdraw funds to your linked bank account.
-                    </DialogDescription>
+                    <DialogTitle>Bank Account Details</DialogTitle>
+                    <DialogDescription>Used for all withdrawal payments.</DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 py-4">
+                  <div className="space-y-4 py-2">
                     <div className="space-y-2">
-                      <Label>Select Wallet</Label>
-                      <Select 
-                        value={withdrawalForm.wallet_type} 
-                        onValueChange={(val) => setWithdrawalForm({ ...withdrawalForm, wallet_type: val })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="user_wallet">User Wallet (₦{wallet?.user_wallet_balance.toLocaleString()})</SelectItem>
-                          <SelectItem value="gfe_wallet">GFE Wallet (₦{wallet?.gfe_wallet_balance.toLocaleString()})</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label>Bank Name</Label>
+                      <Input placeholder="e.g. First Bank" value={bankForm.bank_name}
+                        onChange={(e) => setBankForm({ ...bankForm, bank_name: e.target.value })} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="amount">Amount (₦)</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        placeholder="5000"
-                        min="5000"
-                        value={withdrawalForm.amount}
-                        onChange={(e) => setWithdrawalForm({ ...withdrawalForm, amount: e.target.value })}
-                      />
-                      <p className="text-xs text-muted-foreground">Minimum withdrawal: ₦5,000</p>
+                      <Label>Account Number</Label>
+                      <Input placeholder="0123456789" maxLength={10} value={bankForm.bank_account_number}
+                        onChange={(e) => setBankForm({ ...bankForm, bank_account_number: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Account Name</Label>
+                      <Input placeholder="As it appears on your bank account" value={bankForm.bank_account_name}
+                        onChange={(e) => setBankForm({ ...bankForm, bank_account_name: e.target.value })} />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsWithdrawalDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleRequestWithdrawal}>Submit Request</Button>
+                    <Button variant="outline" onClick={() => setIsBankDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleUpdateBankDetails}>Save</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-            </CardHeader>
-            <CardContent>
-              {transactions.length > 0 ? (
-                <div className="space-y-3">
-                  {transactions.map((tx) => (
-                    <div key={tx.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center",
-                          tx.amount > 0 ? "bg-emerald/10 text-emerald" : "bg-coral/10 text-coral"
-                        )}>
-                          {tx.amount > 0 ? <ArrowDownRight className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{tx.narration || tx.transaction_type}</p>
-                          <p className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString()}</p>
-                        </div>
+            )}
+          </CardHeader>
+          <CardContent>
+            {wallet?.bank_account_number ? (
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-semibold">{wallet.bank_name}</p>
+                  <p className="text-sm text-muted-foreground">{wallet.bank_account_number}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">{wallet.bank_account_name}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Building2 className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-40" />
+                <p className="text-muted-foreground text-sm mb-3">No bank details added yet</p>
+                <Button variant="secondary" size="sm" onClick={() => setIsBankDialogOpen(true)}>Add Bank Details</Button>
+              </div>
+            )}
+
+            {wallet?.bank_details_locked && (
+              <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-md mt-3">
+                <Clock className="w-4 h-4 flex-shrink-0" />
+                <span>Details locked pending verification</span>
+              </div>
+            )}
+
+            <Separator className="my-4" />
+
+            {/* Withdrawal button */}
+            <Dialog open={isWithdrawalDialogOpen} onOpenChange={setIsWithdrawalDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full" disabled={!wallet?.bank_account_number}>
+                  <ArrowUpRight className="w-4 h-4 mr-2" />
+                  Request Withdrawal
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Request Withdrawal</DialogTitle>
+                  <DialogDescription>Funds are deducted immediately and sent within 72 hours.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-2">
+                    <Label>Withdraw From</Label>
+                    <Select value={withdrawalForm.wallet_type}
+                      onValueChange={(v) => setWithdrawalForm({ ...withdrawalForm, wallet_type: v, amount: "" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="user_wallet">
+                          Main Wallet — ₦{(wallet?.user_wallet_balance || 0).toLocaleString()}
+                        </SelectItem>
+                        <SelectItem value="gfe_wallet">
+                          GFE Wallet (Commissions) — ₦{(wallet?.gfe_wallet_balance || 0).toLocaleString()}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Amount (₦)</Label>
+                    <Input type="number" placeholder="5000" min="5000" max={selectedBalance}
+                      value={withdrawalForm.amount}
+                      onChange={(e) => setWithdrawalForm({ ...withdrawalForm, amount: e.target.value })} />
+                    <p className="text-xs text-muted-foreground">
+                      Available: ₦{selectedBalance.toLocaleString()} · Minimum: ₦5,000
+                    </p>
+                  </div>
+
+                  {/* Live fee preview */}
+                  {preview && (
+                    <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm border">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Gross amount</span>
+                        <span>₦{preview.gross.toLocaleString()}</span>
                       </div>
-                      <p className={cn("font-medium", tx.amount > 0 ? "text-emerald" : "text-coral")}>
-                        {tx.amount > 0 ? "+" : ""}₦{Math.abs(tx.amount).toLocaleString()}
+                      <div className="flex justify-between text-destructive">
+                        <span>Processing fee ({preview.fee_rate_pct}%)</span>
+                        <span>−₦{preview.fee.toLocaleString()}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between font-bold text-base">
+                        <span>You receive</span>
+                        <span className="text-green-600">₦{preview.net.toLocaleString()}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        To: {wallet?.bank_name} · {wallet?.bank_account_number}
                       </p>
                     </div>
-                  ))}
+                  )}
+
+                  <div className="grid grid-cols-3 gap-3 text-xs text-center">
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="font-semibold">10% / 15%</p>
+                      <p className="text-muted-foreground">Paying / Free</p>
+                    </div>
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="font-semibold">₦5,000</p>
+                      <p className="text-muted-foreground">Minimum</p>
+                    </div>
+                    <div className="bg-muted/50 rounded p-2">
+                      <p className="font-semibold">72 hrs</p>
+                      <p className="text-muted-foreground">Processing</p>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No transactions yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsWithdrawalDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleRequestWithdrawal} disabled={isSubmitting || !preview}>
+                    {isSubmitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Submitting...</> : "Confirm Withdrawal"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+
+        {/* Transaction History */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Transaction History</CardTitle>
+            <CardDescription>Recent wallet activity</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {transactions.length > 0 ? (
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {transactions.map((tx) => (
+                  <div key={tx.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                        tx.amount > 0 ? "bg-green-100 text-green-600" : "bg-red-100 text-red-500"
+                      )}>
+                        {tx.amount > 0 ? <ArrowDownRight className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate max-w-[160px]">{tx.narration || tx.transaction_type}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className={cn("font-semibold text-sm", tx.amount > 0 ? "text-green-600" : "text-red-500")}>
+                        {tx.amount > 0 ? "+" : ""}₦{Math.abs(tx.amount).toLocaleString()}
+                      </p>
+                      <Badge variant="outline" className="text-xs">{tx.status}</Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10 text-muted-foreground">
+                <Clock className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">No transactions yet</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Withdrawal Info */}
-      <Card className="bg-muted/30">
-        <CardContent className="p-6">
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">Processing Fee</p>
-              <p className="font-medium">
-                {profile?.user_tier === "exclusive" ? "5%" : profile?.user_tier === "premium" ? "10%" : "15%"}
-              </p>
+      {/* Withdrawal History */}
+      {withdrawalHistory.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Withdrawal Requests</CardTitle>
+            <CardDescription>Track your payout status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {withdrawalHistory.map((req) => (
+                <div key={req.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center",
+                      req.status === "approved" ? "bg-green-100 text-green-600" :
+                      req.status === "rejected" ? "bg-red-100 text-red-500" :
+                      "bg-amber-100 text-amber-600"
+                    )}>
+                      {req.status === "approved" ? <CheckCircle2 className="w-4 h-4" /> :
+                       req.status === "rejected" ? <XCircle className="w-4 h-4" /> :
+                       <Clock className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">
+                        ₦{(req.net_amount || req.amount).toLocaleString()} → {req.bank_name || "Bank"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(req.created_at).toLocaleDateString()} · {req.wallet_type?.replace(/_/g, " ")}
+                        {req.gross_amount && req.fee_amount ? ` · Fee: ₦${req.fee_amount.toLocaleString()}` : ""}
+                      </p>
+                      {req.rejection_reason && (
+                        <p className="text-xs text-destructive mt-0.5">{req.rejection_reason}</p>
+                      )}
+                    </div>
+                  </div>
+                  <Badge variant={
+                    req.status === "approved" ? "default" :
+                    req.status === "rejected" ? "destructive" : "secondary"
+                  }>
+                    {req.status}
+                  </Badge>
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="text-muted-foreground">Minimum Withdrawal</p>
-              <p className="font-medium">₦5,000</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Processing Time</p>
-              <p className="font-medium">Within 72 hours</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
-
