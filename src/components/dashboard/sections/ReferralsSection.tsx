@@ -19,7 +19,7 @@ export function ReferralsSection() {
   const [copied, setCopied] = useState(false);
   const [showReferralCode, setShowReferralCode] = useState(false);
 
-  const referralLink = `${window.location.origin}/signup?ref=${profile?.referral_code}`;
+  const referralLink = `https://investours.app/signup?ref=${profile?.referral_code}`;
 
   useEffect(() => {
     const fetchData = async () => {

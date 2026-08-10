@@ -26,7 +26,8 @@ import {
   Banknote,
   Tag,
   BarChart3,
-  Clock
+  Clock,
+  Trophy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ const menuItems = [
   { icon: Package, label: "Audit Packs", path: "/admin/audit-packs" },
   { icon: Star, label: "Featured Products", path: "/admin/featured-solutions" },
   { icon: Clock, label: "Audit Orders", path: "/admin/audit-orders" },
+  { icon: Trophy, label: "AI Challenge", path: "/admin/ai-challenge" },
   { icon: GraduationCap, label: "Education", path: "/admin/education" },
   { icon: MessageSquare, label: "Opportunity Hub", path: "/admin/community" },
   { icon: Wallet, label: "Wallets", path: "/admin/wallets" },

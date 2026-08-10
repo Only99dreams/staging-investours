@@ -215,10 +215,6 @@ export const SubscriptionPayment: React.FC<SubscriptionPaymentProps> = ({
       user_id: user?.id ?? '',
       plan_type: planType,
       promo_code_id: appliedPromo?.promo_code_id ?? null,
-      custom_fields: [
-        { display_name: 'Plan', variable_name: 'plan_type', value: planType },
-        { display_name: 'User ID', variable_name: 'user_id', value: user?.id ?? '' },
-      ],
     },
   };
 

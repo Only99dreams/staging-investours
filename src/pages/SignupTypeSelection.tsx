@@ -222,7 +222,11 @@ const SignupTypeSelection = () => {
       if (session) {
         // Send welcome email (fire-and-forget)
         supabase.functions.invoke('send-notification', {
-          body: { type: 'welcome', email: formData.email }
+          body: {
+            type: 'welcome',
+            recipient_id: user?.id,
+            recipient_name: selectedType === 'individual' ? formData.fullName : formData.contactName,
+          }
         }).catch(() => {});
 
         toast({
@@ -233,7 +237,7 @@ const SignupTypeSelection = () => {
       } else {
         toast({
           title: "Check your email!",
-          description: "We've sent you a confirmation link. Please verify your email to complete your signup.",
+          description: "We sent a confirmation link to " + formData.email + ". Click it to activate your account.",
         });
         navigate("/auth");
       }

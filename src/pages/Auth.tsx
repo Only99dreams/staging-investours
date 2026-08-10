@@ -10,13 +10,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import investoursLogo from "@/assets/investours-logo.png";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, signOut, user, isLoading: authLoading } = useAuth();
+  const { signIn, user, isLoading: authLoading } = useAuth();
   
   const initialMode = searchParams.get("mode") === "forgot" ? "forgot" : "login";
   const [mode, setMode] = useState<"login" | "forgot">(initialMode);
@@ -58,8 +59,55 @@ const Auth = () => {
         navigate("/dashboard");
       }
     } else if (mode === "forgot") {
-      setIsLoading(false);
-      navigate(`/reset-password?email=${encodeURIComponent(formData.email)}`);
+      try {
+        // Try to update email opt-in preference if user profile exists
+        try {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', formData.email)
+            .maybeSingle();
+          
+          if (profileData) {
+            await supabase
+              .from('profiles')
+              .update({ email_opt_in: emailOptIn })
+              .eq('id', profileData.id);
+          }
+        } catch (profileError) {
+          console.log('Could not update email opt-in preference:', profileError);
+        }
+        
+        const resetUrl = `${window.location.origin}/reset-password`;
+        
+        const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+          redirectTo: resetUrl,
+        });
+        
+        setIsLoading(false);
+        
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Check your email",
+            description: "We've sent you a password reset link. The link will expire in 1 hour.",
+          });
+          setMode("login");
+          setFormData({ email: "", password: "" });
+        }
+      } catch (error) {
+        setIsLoading(false);
+        toast({
+          title: "Error",
+          description: "Failed to send reset email. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -178,9 +226,6 @@ const Auth = () => {
                     </label>
                   </div>
 
-                  <p className="text-sm text-muted-foreground mt-2">
-                    If your account existed before the migration, use "Forgot password?" to recover access.
-                  </p>
                 </>
               )}
 

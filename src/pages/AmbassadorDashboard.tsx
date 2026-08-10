@@ -115,7 +115,7 @@ const AmbassadorDashboard = () => {
 
   const referralLink = useMemo(() => {
     const code = stats?.referral_code ?? profile?.referral_code;
-    return code ? `${window.location.origin}/signup?ref=${code}` : "";
+    return code ? `https://investours.app/signup?ref=${code}` : "";
   }, [stats, profile]);
 
   const copyReferralLink = () => {

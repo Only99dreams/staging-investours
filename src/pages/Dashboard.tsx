@@ -15,6 +15,7 @@ import { SettingsSection } from "@/components/dashboard/sections/SettingsSection
 import { NotificationsSection } from "@/components/dashboard/sections/NotificationsSection";
 import { LeaderboardSection } from "@/components/dashboard/sections/LeaderboardSection";
 import { SavedPlansSection } from "@/components/dashboard/sections/SavedPlansSection";
+import { FHAPortfolioSection } from "@/components/dashboard/sections/FHAPortfolioSection";
 import { AuditorDashboard } from "@/pages/AuditorDashboard";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Loader2 } from "lucide-react";
@@ -126,7 +127,7 @@ const Dashboard = () => {
           } />
           <Route path="/ai-reports" element={
             <>
-              <DashboardHeader title="AI Reports" onMenuClick={() => setSidebarOpen(true)} />
+              <DashboardHeader title="AI Auditor" onMenuClick={() => setSidebarOpen(true)} />
               <AIReportsSection />
             </>
           } />
@@ -134,6 +135,12 @@ const Dashboard = () => {
             <>
               <DashboardHeader title="AI Financial Auditor" onMenuClick={() => setSidebarOpen(true)} />
               <AuditorDashboard embedded />
+            </>
+          } />
+          <Route path="/fha-portfolio" element={
+            <>
+              <DashboardHeader title="FHA Portfolio" onMenuClick={() => setSidebarOpen(true)} />
+              <FHAPortfolioSection />
             </>
           } />
           <Route path="/microinsurance" element={
