@@ -63,7 +63,8 @@ export interface PostMetadata {
   imageAlt: string;
   imageWidth: number | null;
   imageHeight: number | null;
-  ogType: "article";
+  /** "video.other" for direct video files so og:video tags are honoured by crawlers. */
+  ogType: "article" | "video.other";
   /** Set only when the post's own media is a playable video. */
   videoUrl: string | null;
   videoMimeType: string | null;
@@ -215,24 +216,45 @@ const FRAME_CACHE_MS = 10 * 60 * 1000;
 /**
  * The preview image, with any stored video frame verified to exist.
  *
- * A frame that has not been generated yet yields no image at all rather than a
- * URL that would render broken, and rather than a logo that is not the post's.
+ * A frame that has not been generated yet falls back to the site logo so social
+ * cards always show something meaningful rather than blank. The logo is a known
+ * good URL and requires no verification.
  */
 export async function resolvePostPreviewImage(
   post: ShareablePost | null | undefined,
   authorName?: string | null,
+  siteUrl = "https://investours.app",
 ): Promise<PostPreview> {
   const preview = derivePostPreview(post, authorName);
-  if (!preview.needsVerification || !preview.image) return preview;
+  if (!preview.needsVerification || !preview.image) {
+    // For video posts with no derivable image at all, fall back to the logo so
+    // the social card is never blank.
+    if (preview.kind === "none" && post?.attachment_type === "video") {
+      return {
+        ...preview,
+        image: `${siteUrl}/logo.png`,
+        kind: "image",
+        needsVerification: false,
+        width: null,
+        height: null,
+      };
+    }
+    return preview;
+  }
 
   const cached = framePresence.get(preview.image);
   if (cached && Date.now() - cached.at < FRAME_CACHE_MS) {
-    return cached.exists ? preview : derivePostPreview(null, authorName);
+    // Frame confirmed present — use it. Frame confirmed absent — fall back to logo.
+    return cached.exists
+      ? preview
+      : { ...preview, image: `${siteUrl}/logo.png`, kind: "image", needsVerification: false };
   }
 
   const exists = await objectExists(preview.image);
   framePresence.set(preview.image, { at: Date.now(), exists });
-  return exists ? preview : derivePostPreview(null, authorName);
+  return exists
+    ? preview
+    : { ...preview, image: `${siteUrl}/logo.png`, kind: "image", needsVerification: false };
 }
 
 /**
@@ -291,13 +313,22 @@ export function buildPostMetadata(
     // a candidate at this point, so it carries no size until it is resolved.
     imageWidth: preview.needsVerification ? null : preview.width,
     imageHeight: preview.needsVerification ? null : preview.height,
-    ogType: "article",
+    // og:type must be "video.other" for direct video files or Facebook/WhatsApp
+    // will ignore the og:video tags and fall back to a static image card.
+    // YouTube/Vimeo links are not direct files, so they stay as "article".
+    ogType:
+      post.attachment_type === "video" &&
+      post.attachment_url &&
+      /\.(mp4|m4v|webm|ogv|mov)(\?|#|$)/i.test(post.attachment_url)
+        ? "video.other"
+        : "article",
     videoUrl:
       post.attachment_type === "video" ? (post.attachment_url ?? null) : null,
     videoMimeType:
       post.attachment_type === "video" ? videoMimeTypeFor(post.attachment_url) : null,
-    // True when the post has no media, so no image is advertised at all.
-    usesDefaultImage: preview.kind === "none",
+    // True when the post has no media of its own, so no image is advertised.
+    // A logo fallback on a video post is still meaningful, so it is not "default".
+    usesDefaultImage: preview.kind === "none" && post.attachment_type !== "video",
     isCompetitionEntry: isEntry,
   };
 }
