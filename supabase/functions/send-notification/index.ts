@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const APP_URL = "https://investours.com";
-const FROM_EMAIL = "Investours <notifications@investours.com>";
+const FROM_EMAIL = "Investours <noreply@investours.app>";
 
 type NotificationType =
   | "welcome"

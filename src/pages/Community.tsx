@@ -447,6 +447,7 @@ const Community = () => {
 
   useEffect(() => {
     const postId = searchParams.get("post");
+    const autoplay = searchParams.get("autoplay") === "1";
     if (postId && posts.length > 0) {
       const post = posts.find((p) => p.id === postId);
       if (post) {
@@ -457,6 +458,11 @@ const Community = () => {
           image: post.attachment_type === "image" ? post.attachment_url : undefined,
           url: shareUrl,
         });
+
+        // Auto-play the video when arriving from a social share link
+        if (autoplay && post.attachment_type === "video") {
+          setPlayingVideos((prev) => new Set([...prev, postId]));
+        }
 
         // Scroll to the exact post after a short delay for rendering
         setTimeout(() => {
@@ -1301,7 +1307,7 @@ const Community = () => {
                               <div className="mb-4 aspect-video w-full overflow-hidden rounded-lg bg-black">
                                 {isPlaying ? (
                                   <iframe
-                                    src={linked.embedUrl}
+                                    src={`${linked.embedUrl}${linked.embedUrl.includes('?') ? '&' : '?'}autoplay=1`}
                                     title="Embedded video"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
@@ -1433,18 +1439,23 @@ const Community = () => {
                                 {(() => {
                                   const sharePost = posts.find((p) => p.id === post.id);
                                   if (!sharePost) return null;
-                                  // Image posts use their own picture. Video posts
-                                  // use a poster derived from the link, or the frame
-                                  // grabbed in-browser for an uploaded file.
                                   const isVideo = sharePost.attachment_type === "video";
                                   const preview = attachmentThumbnail(
                                     sharePost.attachment_url,
                                     sharePost.attachment_type,
                                   ) ?? (isVideo ? videoThumbnails[sharePost.id] ?? null : null);
-                                  if (!preview) return null;
+                                  // Always show something for video posts even when no
+                                  // thumbnail has been generated yet.
+                                  if (!preview && !isVideo) return null;
                                   return (
-                                    <div className="relative rounded-lg overflow-hidden mb-2 border">
-                                      <img src={preview} alt={isVideo ? "Video" : "Post"} className="w-full max-h-32 object-cover" />
+                                    <div className="relative rounded-lg overflow-hidden mb-2 border bg-black">
+                                      {preview ? (
+                                        <img src={preview} alt={isVideo ? "Video" : "Post"} className="w-full max-h-32 object-cover" />
+                                      ) : (
+                                        <div className="w-full h-24 flex items-center justify-center">
+                                          <Play className="w-10 h-10 text-white/60" />
+                                        </div>
+                                      )}
                                       {isVideo && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                                           <Play className="w-6 h-6 text-white" />

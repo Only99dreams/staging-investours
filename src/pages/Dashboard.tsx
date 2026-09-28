@@ -21,10 +21,12 @@ import { FHAPortfolioSection } from "@/components/dashboard/sections/FHAPortfoli
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { captureReferralCode } from "@/lib/referral";
 import { Loader2 } from "lucide-react";
+import { useVideoThumbnailBackfill } from "@/hooks/useVideoThumbnailBackfill";
 
 const Dashboard = () => {
   const { user, profile, isLoading } = useAuth();
   const navigate = useNavigate();
+  useVideoThumbnailBackfill();
   const [searchParams] = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
