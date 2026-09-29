@@ -5,7 +5,11 @@
       "destination": "/api/post/:id"
     },
     {
-      "source": "/((?!api/|post/).*)",
+      "source": "/post-image/:id",
+      "destination": "/api/post-image/:id"
+    },
+    {
+      "source": "/((?!api/|post/|post-image/).*)",
       "destination": "/index.html"
     }
   ]

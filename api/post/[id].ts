@@ -178,17 +178,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const canonicalUrl = `${SITE_URL}/post/${encodeURIComponent(post.id)}`;
   const appUrl = `${SITE_URL}/community?post=${encodeURIComponent(post.id)}&autoplay=1`;
+  // The image proxy URL always returns real image bytes from our own server.
+  // Crawlers (WhatsApp, LinkedIn, Facebook) fetch og:image directly — pointing
+  // them here avoids CORS issues, missing thumbnails and cross-origin refusals.
+  const proxyImageUrl =
+    post.attachment_type === "image" || post.attachment_type === "video"
+      ? `${SITE_URL}/post-image/${encodeURIComponent(post.id)}`
+      : null;
 
-  // Verified variant: an uploaded video's stored frame is only used if it
-  // really exists. A post with no usable media resolves to no image at all, and
-  // then no image tag is emitted - see the tag blocks below.
   const preview = await resolvePostPreviewImage(post, post.author_name);
   const meta = buildPostMetadata(post, {
     canonicalUrl,
-    // The resolved preview, not a fresh derivation: an uploaded video's stored
-    // frame is a candidate until a HEAD confirms it, and using the unresolved
-    // value would put a 404 URL in og:image.
     preview,
+    // Override the image with the proxy URL so og:image always points to our
+    // own server rather than a raw Supabase storage URL.
+    proxyImageUrl,
   });
 
   const author = (post.author_name ?? "").trim();

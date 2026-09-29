@@ -269,14 +269,14 @@ export function buildPostMetadata(
   options: {
     canonicalUrl: string;
     siteName?: string;
-    /** Replaces the generated description, for entries that need specific copy. */
     descriptionOverride?: string | null;
-    /**
-     * A preview already resolved with `resolvePostPreviewImage`. Supplied by the
-     * server, which has confirmed an uploaded video's stored frame exists;
-     * without it the unverified candidate is used and could 404.
-     */
     preview?: PostPreview;
+    /**
+     * When supplied, og:image is set to this URL instead of the raw media URL.
+     * The server passes the /post-image/:id proxy here so crawlers always hit
+     * our own server rather than a raw Supabase storage URL.
+     */
+    proxyImageUrl?: string | null;
   },
 ): PostMetadata {
   const siteName = options.siteName ?? "Investours Opportunity Hub";
@@ -302,12 +302,14 @@ export function buildPostMetadata(
   const title = author ? `${headline} - ${author} on ${siteName}` : `${headline} - ${siteName}`;
 
   const preview = options.preview ?? derivePostPreview(post, author);
+  // Use the proxy URL when provided so og:image always points to our server.
+  const imageUrl = options.proxyImageUrl ?? preview.image;
 
   return {
     title,
     description,
     canonicalUrl: options.canonicalUrl,
-    image: preview.image,
+    image: imageUrl,
     imageAlt: preview.alt,
     // Dimensions are only asserted where they are known. A stored video frame is
     // a candidate at this point, so it carries no size until it is resolved.
